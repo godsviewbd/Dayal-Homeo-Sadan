@@ -16,13 +16,13 @@ export function MedicineCard({ medicine }: MedicineCardProps) {
       {/* Top section: Name, Badge, and Details */}
       <div>
         {/* Container for Name and Badge - Using Flexbox */}
-        <div className="mb-3 flex items-start justify-between gap-x-3">
+        <div className="mb-3 flex items-start"> {/* Removed justify-between and gap, will use margin on badge */}
           {/* Medicine Name - takes available space and wraps */}
-          <h3 className="flex-grow min-w-0 text-xl font-semibold text-gray-900 dark:text-gray-100 break-words">
+          <h3 className="flex-1 min-w-0 text-xl font-semibold text-gray-900 dark:text-gray-100 break-words">
             {medicine.name}
           </h3>
           {/* Quantity Badge - does not shrink, aligned with top of name */}
-          <div className="flex-shrink-0 mt-1">
+          <div className="ml-3 flex-shrink-0 mt-1"> {/* Added ml-3 for spacing */}
             <QuantityBadge quantity={medicine.quantity} />
           </div>
         </div>
