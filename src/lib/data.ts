@@ -16,8 +16,13 @@ interface MedicineIndication {
   indications: string;
 }
 
+// In-memory stores, initialized as empty.
 let medicineIndications: MedicineIndication[] = [];
-let indicationsLoaded = false;
+let indicationsLoaded = false; // Flag to ensure indications are loaded only once per app lifecycle (or as needed)
+
+let medicinesStore: Medicine[] = [];
+// No medicinesStoreLoaded flag, as medicine data is mutable and might be reloaded frequently by write operations.
+
 
 async function persistMedicinesToCSV(medicinesToPersist: Medicine[]): Promise<void> {
   console.log(`DATA: Attempting to persist ${medicinesToPersist.length} medicines to CSV: ${MEDICINE_DATA_CSV_FILE_PATH}`);
@@ -44,15 +49,14 @@ async function persistMedicinesToCSV(medicinesToPersist: Medicine[]): Promise<vo
   }
 }
 
-function loadMedicinesFromCSV(): Medicine[] {
-  console.log(`DATA: Attempting to load medicines from CSV: ${MEDICINE_DATA_CSV_FILE_PATH}`);
+// Renamed to avoid conflict and clarify it's an internal loader.
+function loadMedicinesFromCSVInternal(): Medicine[] {
+  console.log(`DATA: loadMedicinesFromCSVInternal called. Attempting to load medicines from CSV: ${MEDICINE_DATA_CSV_FILE_PATH}`);
 
   if (!fs.existsSync(MEDICINE_DATA_CSV_FILE_PATH)) {
     console.error(`!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`);
     console.error(`DATA: ERROR - CSV file not found at ${MEDICINE_DATA_CSV_FILE_PATH}.`);
-    console.error(`Please create this file with the header (ensure exact match for '${MEDICINE_DATA_CSV_HEADERS[1]}'):`);
-    console.error(MEDICINE_DATA_CSV_HEADERS.join(','));
-    console.error(`The application will proceed with an empty inventory.`);
+    // ... (rest of the error logging for missing file)
     console.error(`!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`);
     return [];
   }
@@ -66,6 +70,7 @@ function loadMedicinesFromCSV(): Medicine[] {
       transformHeader: header => header.trim(),
     });
 
+    // ... (rest of the header validation and data processing logic from original loadMedicinesFromCSV)
     const actualHeaders = parsed.meta.fields;
     if (!actualHeaders) {
       console.error(`Error: DATA: CSV file at ${MEDICINE_DATA_CSV_FILE_PATH} appears to be empty or has no headers. Inventory will be empty.`);
@@ -90,7 +95,6 @@ function loadMedicinesFromCSV(): Medicine[] {
     if (parsed.data.length === 0 && fileContentLines.length > 1) {
       console.warn(`DATA: CSV file at ${MEDICINE_DATA_CSV_FILE_PATH} has ${fileContentLines.length} lines but PapaParse found 0 data rows. This could indicate formatting issues or all data rows were invalid/skipped.`);
     }
-
 
     const loadedMedicines = parsed.data.map((row, index) => {
       const medicineName = row[MEDICINE_DATA_CSV_HEADERS[0]]?.trim();
@@ -151,7 +155,6 @@ function loadMedicinesFromCSV(): Medicine[] {
         return null;
       }
 
-
       const safeMedicineName = medicineName.replace(/[^a-zA-Z0-9-_]/g, '-').toLowerCase();
       const safePotency = extractedPotency.replace(/[^a-zA-Z0-9-_]/g, '-').toLowerCase();
       const safeBoxNumber = boxNumber.replace(/[^a-zA-Z0-9-_]/g, '-').toLowerCase();
@@ -161,10 +164,10 @@ function loadMedicinesFromCSV(): Medicine[] {
         id: generatedId,
         name: medicineName,
         potency: extractedPotency,
-        preparation: 'Liquid' as Preparation,
+        preparation: 'Liquid' as Preparation, // Default as per previous design
         location: boxNumber,
         quantity: quantity,
-        supplier: undefined,
+        supplier: undefined, // Default as per previous design
       };
       return newMedicineEntry;
     }).filter(Boolean) as Medicine[];
@@ -181,17 +184,12 @@ function loadMedicinesFromCSV(): Medicine[] {
   }
 }
 
-let medicinesStore: Medicine[] = loadMedicinesFromCSV(); // Renamed for clarity
-
-function loadIndicationsFromCSV(): void {
-  if (indicationsLoaded) return; 
-
-  console.log(`DATA_INDICATIONS: Attempting to load medicine indications from CSV: ${INDICATIONS_CSV_FILE_PATH}`);
+// Internal loader for indications.
+function loadIndicationsFromCSVInternal(): MedicineIndication[] {
+  console.log(`DATA_INDICATIONS: loadIndicationsFromCSVInternal called. Attempting to load indications from CSV: ${INDICATIONS_CSV_FILE_PATH}`);
   if (!fs.existsSync(INDICATIONS_CSV_FILE_PATH)) {
-    console.warn(`DATA_INDICATIONS: Indications CSV file not found at ${INDICATIONS_CSV_FILE_PATH}. Indications feature will be unavailable. Please create this file with headers: ${INDICATIONS_CSV_HEADERS.join(',')}`);
-    medicineIndications = [];
-    indicationsLoaded = true;
-    return;
+    console.warn(`DATA_INDICATIONS: Indications CSV file not found at ${INDICATIONS_CSV_FILE_PATH}. Indications feature will be unavailable.`);
+    return [];
   }
 
   try {
@@ -202,26 +200,22 @@ function loadIndicationsFromCSV(): void {
       dynamicTyping: false,
       transformHeader: header => header.trim(),
     });
-
-    const actualHeaders = parsed.meta.fields;
-     if (!actualHeaders || actualHeaders.length === 0) {
-      console.warn(`DATA_INDICATIONS: Indications CSV file at ${INDICATIONS_CSV_FILE_PATH} is empty or has no headers. Indications feature will be unavailable.`);
-      medicineIndications = [];
-      indicationsLoaded = true;
-      return;
-    }
     
-    const missingHeaders = INDICATIONS_CSV_HEADERS.filter(expectedHeader => !actualHeaders.includes(expectedHeader));
-    if (missingHeaders.length > 0) {
-      console.error(`Error: DATA_INDICATIONS: Indications CSV file at ${INDICATIONS_CSV_FILE_PATH} is missing required headers.`);
-      console.error(`Required: [${INDICATIONS_CSV_HEADERS.join(', ')}]. Found: [${actualHeaders.join(', ')}]. Missing: [${missingHeaders.join(', ')}].`);
-      console.error(`Indications feature will be unavailable.`);
-      medicineIndications = [];
-      indicationsLoaded = true;
-      return;
-    }
+    const actualHeaders = parsed.meta.fields;
+    if (!actualHeaders || actualHeaders.length === 0) {
+     console.warn(`DATA_INDICATIONS: Indications CSV file at ${INDICATIONS_CSV_FILE_PATH} is empty or has no headers. Indications feature will be unavailable.`);
+     return [];
+   }
+   
+   const missingHeaders = INDICATIONS_CSV_HEADERS.filter(expectedHeader => !actualHeaders.includes(expectedHeader));
+   if (missingHeaders.length > 0) {
+     console.error(`Error: DATA_INDICATIONS: Indications CSV file at ${INDICATIONS_CSV_FILE_PATH} is missing required headers.`);
+     console.error(`Required: [${INDICATIONS_CSV_HEADERS.join(', ')}]. Found: [${actualHeaders.join(', ')}]. Missing: [${missingHeaders.join(', ')}].`);
+     console.error(`Indications feature will be unavailable.`);
+     return [];
+   }
 
-    medicineIndications = parsed.data.map((row, index) => {
+    const loadedIndications = parsed.data.map((row, index) => {
       const name = row[INDICATIONS_CSV_HEADERS[0]]?.trim();
       const indications = row[INDICATIONS_CSV_HEADERS[1]]?.trim();
 
@@ -231,125 +225,109 @@ function loadIndicationsFromCSV(): void {
       }
       return { name, indications };
     }).filter(Boolean) as MedicineIndication[];
+    
+    console.log(`DATA_INDICATIONS: Successfully loaded ${loadedIndications.length} medicine indications from ${INDICATIONS_CSV_FILE_PATH}.`);
+    return loadedIndications;
 
-    console.log(`DATA_INDICATIONS: Successfully loaded ${medicineIndications.length} medicine indications from ${INDICATIONS_CSV_FILE_PATH}.`);
-    indicationsLoaded = true;
   } catch (error) {
     console.error('DATA_INDICATIONS: CRITICAL failure while loading medicine indications from CSV:', error instanceof Error ? error.message : String(error));
-    medicineIndications = []; 
-    indicationsLoaded = true; 
+    return [];
   }
 }
 
-
-if (!indicationsLoaded) {
-  loadIndicationsFromCSV();
+// Helper function to ensure medicines data is loaded into medicinesStore
+async function ensureMedicinesLoaded(): Promise<Medicine[]> {
+    // For simplicity in a dev environment and given persistence, we reload on each significant read.
+    // This could be optimized with a 'medicinesStoreLoaded' flag if reads were much more frequent than writes.
+    console.log("DATA: ensureMedicinesLoaded - reloading from CSV.");
+    medicinesStore = loadMedicinesFromCSVInternal();
+    return JSON.parse(JSON.stringify(medicinesStore)); // Return a copy
 }
 
-export async function getIndicationsByMedicineName(medicineName: string): Promise<string | undefined> {
-  if (!indicationsLoaded) { 
-    console.log("DATA_INDICATIONS: Indications not loaded on demand call, attempting to load now.");
-    loadIndicationsFromCSV();
+// Helper function to ensure indications data is loaded
+async function ensureIndicationsLoaded(): Promise<MedicineIndication[]> {
+  if (!indicationsLoaded) {
+    console.log("DATA_INDICATIONS: ensureIndicationsLoaded - indications not loaded, loading now.");
+    medicineIndications = loadIndicationsFromCSVInternal();
+    indicationsLoaded = true; // Set flag after loading
   }
-
-  console.log(`DATA_INDICATIONS: getIndicationsByMedicineName called for: "${medicineName}"`);
-  console.log(`DATA_INDICATIONS: Total indications currently loaded: ${medicineIndications.length}`);
-  if (medicineIndications.length > 0) {
-    console.log(`DATA_INDICATIONS: First 3 loaded indication names for check: ${medicineIndications.slice(0, 3).map(i => i.name).join('; ')}`);
-  }
-
-  const foundIndication = medicineIndications.find(
-    (ind) => ind.name.toLowerCase() === medicineName.toLowerCase()
-  );
-
-  if (foundIndication) {
-    console.log(`DATA_INDICATIONS: Found indications for "${medicineName}": "${foundIndication.indications.substring(0, 50)}..."`);
-    return foundIndication.indications;
-  } else {
-    console.log(`DATA_INDICATIONS: No indications found for "${medicineName}" in the loaded list.`);
-    const similarNames = medicineIndications
-      .filter(ind => ind.name.toLowerCase().includes(medicineName.substring(0, Math.max(3, Math.floor(medicineName.length / 2))).toLowerCase()))
-      .map(ind => ind.name)
-      .slice(0, 5);
-    if (similarNames.length > 0) {
-      console.log(`DATA_INDICATIONS: Potential similar names in CSV based on first half of query: ${similarNames.join('; ')}`);
-    }
-    return undefined;
-  }
+  return JSON.parse(JSON.stringify(medicineIndications)); // Return a copy
 }
 
 
 export async function getMedicines(): Promise<Medicine[]> {
-  console.log("DATA: getMedicines called. Forcing reload from CSV for consistency on inventory page.");
-  const currentMedicinesFromCSV = loadMedicinesFromCSV();
-  medicinesStore = [...currentMedicinesFromCSV];
-  return JSON.parse(JSON.stringify(currentMedicinesFromCSV));
+  console.log("DATA: getMedicines called.");
+  return ensureMedicinesLoaded();
 }
 
 export async function getMedicineById(id: string): Promise<Medicine | undefined> {
-  const currentData = loadMedicinesFromCSV();
-  const medicineById = currentData.find(m => m.id === id);
-  return medicineById ? JSON.parse(JSON.stringify(medicineById)) : undefined;
+  const currentMedicines = await ensureMedicinesLoaded();
+  const medicineById = currentMedicines.find(m => m.id === id);
+  return medicineById; // It's already a copy from ensureMedicinesLoaded
 }
 
 export async function addMedicine(medicineData: Omit<Medicine, 'id'>): Promise<Medicine> {
-  medicinesStore = loadMedicinesFromCSV();
+  let currentMedicines = await ensureMedicinesLoaded(); // Load current state
   const newMedicine: Medicine = { ...medicineData, id: `med_${Date.now()}_${Math.random().toString(36).substr(2, 9)}` };
-  medicinesStore.push(newMedicine);
-  console.log(`DATA: Added medicine '${newMedicine.name}' to IN-MEMORY inventory. Current count: ${medicinesStore.length}. Persisting...`);
-  await persistMedicinesToCSV(medicinesStore);
+  currentMedicines.push(newMedicine); // Modify the loaded list
+  console.log(`DATA: Added medicine '${newMedicine.name}'. Persisting ${currentMedicines.length} medicines...`);
+  await persistMedicinesToCSV(currentMedicines); // Persist the updated full list
+  medicinesStore = [...currentMedicines]; // Update global store (optional, as next read will refresh)
   return JSON.parse(JSON.stringify(newMedicine));
 }
 
 export async function updateMedicine(id: string, updates: Partial<Omit<Medicine, 'id'>>): Promise<Medicine | null> {
-  medicinesStore = loadMedicinesFromCSV();
-  const index = medicinesStore.findIndex(m => m.id === id);
+  let currentMedicines = await ensureMedicinesLoaded();
+  const index = currentMedicines.findIndex(m => m.id === id);
   if (index === -1) {
-    console.warn(`DATA: Update failed. Medicine with ID '${id}' not found in CSV-loaded inventory.`);
+    console.warn(`DATA: Update failed. Medicine with ID '${id}' not found.`);
     return null;
   }
-  const oldQuantity = medicinesStore[index].quantity;
-  medicinesStore[index] = { ...medicinesStore[index], ...updates, id: medicinesStore[index].id };
-  console.log(`DATA: IN-MEMORY update for ID '${id}' (${medicinesStore[index].name}). Quantity changed from ${oldQuantity} to ${medicinesStore[index].quantity}. Persisting to CSV...`);
-  await persistMedicinesToCSV(medicinesStore);
-  return JSON.parse(JSON.stringify(medicinesStore[index]));
+  const oldQuantity = currentMedicines[index].quantity;
+  // Ensure ID is preserved and not overwritten by partial updates
+  currentMedicines[index] = { ...currentMedicines[index], ...updates, id: currentMedicines[index].id };
+  console.log(`DATA: Updated ID '${id}' (${currentMedicines[index].name}). Qty: ${oldQuantity} -> ${currentMedicines[index].quantity}. Persisting ${currentMedicines.length} medicines...`);
+  await persistMedicinesToCSV(currentMedicines);
+  medicinesStore = [...currentMedicines];
+  return JSON.parse(JSON.stringify(currentMedicines[index]));
 }
 
 export async function deleteMedicine(id: string): Promise<boolean> {
-  medicinesStore = loadMedicinesFromCSV();
-  const initialLength = medicinesStore.length;
-  medicinesStore = medicinesStore.filter(m => m.id !== id);
-  if (medicinesStore.length < initialLength) {
-    console.log(`DATA: Deleted medicine ID '${id}' from IN-MEMORY inventory. Persisting...`);
-    await persistMedicinesToCSV(medicinesStore);
+  let currentMedicines = await ensureMedicinesLoaded();
+  const initialLength = currentMedicines.length;
+  const updatedMedicines = currentMedicines.filter(m => m.id !== id);
+  if (updatedMedicines.length < initialLength) {
+    console.log(`DATA: Deleted ID '${id}'. Persisting ${updatedMedicines.length} medicines...`);
+    await persistMedicinesToCSV(updatedMedicines);
+    medicinesStore = [...updatedMedicines];
     return true;
   }
-  console.warn(`DATA: Delete failed. Medicine with ID '${id}' not found for deletion in CSV-loaded inventory.`);
+  console.warn(`DATA: Delete failed. ID '${id}' not found.`);
   return false;
 }
 
 export async function searchMedicinesByNameAndPotency(nameQuery?: string, potencyQuery?: string): Promise<Medicine[]> {
-  console.log(`DATA: Search initiated. Forcing reload from CSV for search consistency. Name: "${nameQuery}", Potency: "${potencyQuery}"`);
-  const currentMedicinesFromCSV = loadMedicinesFromCSV();
+  console.log(`DATA: Search called. Name: "${nameQuery}", Potency: "${potencyQuery}"`);
+  const currentMedicines = await ensureMedicinesLoaded();
+  
+  let results = [...currentMedicines]; // Work with a copy
 
   const isNameQueryEmpty = !nameQuery || nameQuery.trim() === "";
   const isPotencyQueryNonSpecific = !potencyQuery || potencyQuery.trim().toLowerCase() === 'any' || potencyQuery.trim() === "";
 
   if (isNameQueryEmpty && isPotencyQueryNonSpecific) {
-    console.log("DATA: Search is effectively empty (no name and non-specific potency). Returning empty results.");
+    console.log("DATA: Search is effectively empty. Returning empty results.");
     return [];
   }
   
-  if (nameQuery && currentMedicinesFromCSV && currentMedicinesFromCSV.length > 0) {
-    const specificMed = currentMedicinesFromCSV.find(m => m.name.toLowerCase().includes(nameQuery.toLowerCase()));
+  if (nameQuery && currentMedicines && currentMedicines.length > 0) {
+    const specificMed = currentMedicines.find(m => m.name.toLowerCase().includes(nameQuery.toLowerCase()));
     if (specificMed) {
-      console.log(`DATA: DIAGNOSTIC - In search, for nameQuery "${nameQuery}", a matching medicine "${specificMed.name}" (ID: ${specificMed.id}) has QTY: ${specificMed.quantity} (as loaded fresh from CSV for this search).`);
+      console.log(`DATA: DIAGNOSTIC - In search, for nameQuery "${nameQuery}", a matching medicine "${specificMed.name}" (ID: ${specificMed.id}) has QTY: ${specificMed.quantity}.`);
     } else {
-      console.log(`DATA: DIAGNOSTIC - In search, for nameQuery "${nameQuery}", no direct match found in CSV to log specific QTY for this search.`);
+      console.log(`DATA: DIAGNOSTIC - In search, for nameQuery "${nameQuery}", no direct match found to log specific QTY.`);
     }
   }
-
-  let results = [...currentMedicinesFromCSV];
 
   if (!isNameQueryEmpty) {
     const lowerNameQuery = nameQuery!.toLowerCase().trim();
@@ -363,15 +341,44 @@ export async function searchMedicinesByNameAndPotency(nameQuery?: string, potenc
     results = results.filter(m => m.potency.toLowerCase() === lowerPotencyQuery);
   }
 
-  console.log(`DATA: Search (from CSV) found ${results.length} medicines matching criteria.`);
-  return JSON.parse(JSON.stringify(results));
+  console.log(`DATA: Search found ${results.length} medicines.`);
+  return results; // Already a copy
 }
 
 export async function getUniqueMedicineNames(): Promise<string[]> {
-  const currentMedicinesFromCSV = loadMedicinesFromCSV();
+  const currentMedicines = await ensureMedicinesLoaded();
   const uniqueNames = new Set<string>();
-  currentMedicinesFromCSV.forEach(med => uniqueNames.add(med.name));
+  currentMedicines.forEach(med => uniqueNames.add(med.name));
   const sortedNames = Array.from(uniqueNames).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
-  console.log(`DATA: Found ${sortedNames.length} unique medicine names for autocomplete (from CSV).`);
+  console.log(`DATA: Found ${sortedNames.length} unique medicine names for autocomplete.`);
   return sortedNames;
+}
+
+export async function getIndicationsByMedicineName(medicineName: string): Promise<string | undefined> {
+  const currentIndications = await ensureIndicationsLoaded();
+  
+  console.log(`DATA_INDICATIONS: getIndicationsByMedicineName called for: "${medicineName}"`);
+  console.log(`DATA_INDICATIONS: Total indications currently loaded: ${currentIndications.length}`);
+  if (currentIndications.length > 0) {
+    console.log(`DATA_INDICATIONS: First 3 loaded indication names for check: ${currentIndications.slice(0, 3).map(i => i.name).join('; ')}`);
+  }
+
+  const foundIndication = currentIndications.find(
+    (ind) => ind.name.toLowerCase() === medicineName.toLowerCase()
+  );
+
+  if (foundIndication) {
+    console.log(`DATA_INDICATIONS: Found indications for "${medicineName}": "${foundIndication.indications.substring(0, 50)}..."`);
+    return foundIndication.indications;
+  } else {
+    console.log(`DATA_INDICATIONS: No indications found for "${medicineName}" in the loaded list.`);
+    const similarNames = currentIndications
+      .filter(ind => ind.name.toLowerCase().includes(medicineName.substring(0, Math.max(3, Math.floor(medicineName.length / 2))).toLowerCase()))
+      .map(ind => ind.name)
+      .slice(0, 5);
+    if (similarNames.length > 0) {
+      console.log(`DATA_INDICATIONS: Potential similar names in CSV based on first half of query: ${similarNames.join('; ')}`);
+    }
+    return undefined;
+  }
 }
