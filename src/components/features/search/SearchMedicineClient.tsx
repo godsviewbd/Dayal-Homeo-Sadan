@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,10 +16,11 @@ import {
 import { MedicineCard } from "./MedicineCard";
 import type { Medicine } from "@/types";
 import { POTENCIES } from "@/types";
-import { handleParseHomeopathicQuery, fetchMedicinesForSearch } from "@/lib/actions";
+import { handleParseHomeopathicQuery, fetchMedicinesForSearch, handleGetUniqueMedicineNames } from "@/lib/actions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Loader2, SearchIcon, AlertCircle, Wand2, Barcode, Info } from "lucide-react";
 import type { ParseHomeopathicQueryOutput } from "@/ai/flows/parse-homeopathic-query";
+import { cn } from "@/lib/utils";
 
 interface SearchFormData {
   query: string;
@@ -33,7 +34,13 @@ export function SearchMedicineClient() {
   const [aiParsedInfo, setAiParsedInfo] = useState<ParseHomeopathicQueryOutput | null>(null);
   const [initialLoadDone, setInitialLoadDone] = useState(false);
 
-  const { control, handleSubmit, watch, setValue } = useForm<SearchFormData>({
+  const [allMedicineBaseNames, setAllMedicineBaseNames] = useState<string[]>([]);
+  const [nameSuggestions, setNameSuggestions] = useState<string[]>([]);
+  const [showNameSuggestions, setShowNameSuggestions] = useState(false);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
+
+  const { control, handleSubmit, watch, setValue, setFocus } = useForm<SearchFormData>({
     defaultValues: {
       query: "",
       potency: "Any",
@@ -42,6 +49,47 @@ export function SearchMedicineClient() {
 
   const currentQuery = watch("query");
   const currentPotency = watch("potency");
+
+  // Fetch all unique medicine names for autocomplete
+  useEffect(() => {
+    const fetchNames = async () => {
+      try {
+        const names = await handleGetUniqueMedicineNames();
+        setAllMedicineBaseNames(names);
+      } catch (e) {
+        console.error("Failed to fetch unique medicine names for autocomplete:", e);
+      }
+    };
+    fetchNames();
+  }, []);
+
+  // Update suggestions based on current query
+  useEffect(() => {
+    if (currentQuery && currentQuery.length > 1) {
+      const filtered = allMedicineBaseNames.filter(name =>
+        name.toLowerCase().includes(currentQuery.toLowerCase())
+      );
+      setNameSuggestions(filtered.slice(0, 10)); // Limit suggestions
+      setShowNameSuggestions(filtered.length > 0);
+    } else {
+      setNameSuggestions([]);
+      setShowNameSuggestions(false);
+    }
+  }, [currentQuery, allMedicineBaseNames]);
+
+  // Handle clicks outside suggestions to close it
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node)) {
+        setShowNameSuggestions(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [suggestionsRef]);
+
 
   // Fetch all medicines on initial load or when filters are cleared
   useEffect(() => {
@@ -67,44 +115,39 @@ export function SearchMedicineClient() {
     setIsLoading(true);
     setError(null);
     setAiParsedInfo(null);
+    setShowNameSuggestions(false); // Hide suggestions on submit
 
     let searchName = data.query;
     let searchPotency = data.potency;
 
     if (data.query.trim() !== "") {
-      // Use AI to parse the query
       const aiResult = await handleParseHomeopathicQuery({ query: data.query });
       if ('error' in aiResult) {
         setError(aiResult.error);
       } else {
         setAiParsedInfo(aiResult);
-        // Override search fields if AI provides confident results
         if (aiResult.medicineName) searchName = aiResult.medicineName;
 
-        // Robustly match AI potency with available canonical POTENCIES
         if (aiResult.potency && aiResult.potency.toLowerCase() !== "any potency" && searchPotency === "Any") {
            let clientMatchedPotency: string | undefined = undefined;
-           const aiPotencyRaw = aiResult.potency.toLowerCase(); // e.g., "power 200", "200c", "200"
-           for (const canonicalP of POTENCIES) { // POTENCIES are ['200', '30', '1M', etc.]
-               const canonicalPLower = canonicalP.toLowerCase(); // e.g., "200"
-               
-               // Regex to find the canonical potency within the AI's raw potency string.
-               // E.g., if canonicalPLower is "200", pattern will match "200" in "power 200" or "200c".
+           const aiPotencyRaw = aiResult.potency.toLowerCase(); 
+           for (const canonicalP of POTENCIES) { 
+               const canonicalPLower = canonicalP.toLowerCase(); 
                let pattern: RegExp;
-               if (/^\d+$/.test(canonicalPLower)) { // For numeric potencies like "200", "30"
+               if (/^\d+$/.test(canonicalPLower)) { 
                    pattern = new RegExp(`\\b${canonicalPLower}(c|x)?\\b`, 'i');
-               } else { // For potencies with letters like "1M", "3X"
+               } else { 
                    pattern = new RegExp(`\\b${canonicalPLower}\\b`, 'i');
                }
 
                if (pattern.test(aiPotencyRaw)) {
-                   clientMatchedPotency = canonicalP; // Assign the canonical form, e.g., "200"
+                   clientMatchedPotency = canonicalP; 
                    break;
                }
            }
            if (clientMatchedPotency) {
              searchPotency = clientMatchedPotency;
-             setValue('potency', clientMatchedPotency); // Update form field with canonical potency
+             setValue('potency', clientMatchedPotency); 
            }
         }
       }
@@ -122,10 +165,19 @@ export function SearchMedicineClient() {
   };
 
   const handleBarcodeScan = () => {
-    // This is a placeholder for actual barcode scanning functionality
     alert("Barcode scanning feature not implemented in this demo. You would integrate a library like QuaggaJS or use a native device API.");
-    setValue("query", "Scanned: Arnica Montana 30C"); // Example
+    setValue("query", "Scanned: Arnica Montana 30C"); 
   };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setValue("query", suggestion);
+    setNameSuggestions([]);
+    setShowNameSuggestions(false);
+    // Optionally trigger search immediately or wait for user to click search button
+    // handleSubmit(onSubmit)(); // This would trigger search
+    setFocus('query'); // Keep focus on input
+  };
+
 
   return (
     <div className="space-y-8">
@@ -141,7 +193,7 @@ export function SearchMedicineClient() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div className="space-y-2">
+            <div className="space-y-2 relative">
               <Label htmlFor="query">Search Query (or use AI)</Label>
               <div className="flex gap-2">
                 <Controller
@@ -150,9 +202,11 @@ export function SearchMedicineClient() {
                   render={({ field }) => (
                     <Input
                       id="query"
-                      placeholder="e.g., 'Do we have Arnica 30C?' or 'Belladonna'"
+                      placeholder="e.g., 'Arnica 30C' or 'Belladonna'"
                       {...field}
                       className="flex-grow"
+                      onFocus={() => currentQuery && currentQuery.length > 1 && nameSuggestions.length > 0 && setShowNameSuggestions(true)}
+                      autoComplete="off"
                     />
                   )}
                 />
@@ -161,6 +215,23 @@ export function SearchMedicineClient() {
                   <span className="sr-only">Scan Barcode</span>
                 </Button>
               </div>
+              {showNameSuggestions && nameSuggestions.length > 0 && (
+                <div 
+                  ref={suggestionsRef}
+                  className="absolute z-10 w-full bg-background border border-border rounded-md mt-1 shadow-lg max-h-60 overflow-y-auto"
+                >
+                  {nameSuggestions.map((suggestion, index) => (
+                    <div
+                      key={index}
+                      className="p-2 hover:bg-accent cursor-pointer text-sm"
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      onMouseDown={(e) => e.preventDefault()} // Prevents onBlur from firing before click
+                    >
+                      {suggestion}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -256,4 +327,3 @@ export function SearchMedicineClient() {
     </div>
   );
 }
-

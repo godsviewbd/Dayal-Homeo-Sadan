@@ -10,14 +10,12 @@ import {
   deleteMedicine as dbDeleteMedicine,
   searchMedicinesByNameAndPotency as dbSearchMedicines,
   getMedicineById as dbGetMedicineById,
+  getUniqueMedicineNames as dbGetUniqueMedicineNames, // Import new data function
 } from '@/lib/data';
 import type { Medicine } from '@/types';
-import { medicineSchema } from '@/types'; // Import medicineSchema from its new location
+import { medicineSchema } from '@/types';
 import { parseHomeopathicQuery as aiParseQuery } from '@/ai/flows/parse-homeopathic-query';
 import type { ParseHomeopathicQueryInput, ParseHomeopathicQueryOutput } from '@/ai/flows/parse-homeopathic-query';
-
-
-// medicineSchema has been moved to src/types/index.ts
 
 
 export type MedicineFormState = {
@@ -39,13 +37,12 @@ export async function addMedicineAction(
   if (!validatedFields.success) {
     return {
       message: "Validation failed. Please check the fields.",
-      errors: validatedFields.error.flatten().fieldErrors as any, // Cast to any to match simplified error structure
+      errors: validatedFields.error.flatten().fieldErrors as any,
       success: false,
     };
   }
 
   try {
-    // Ensure validatedFields.data matches the expected structure for dbAddMedicine
     const medicineToAdd: Omit<Medicine, 'id'> = {
       name: validatedFields.data.name,
       potency: validatedFields.data.potency,
@@ -60,7 +57,6 @@ export async function addMedicineAction(
     await dbAddMedicine(medicineToAdd);
     revalidatePath('/inventory');
     revalidatePath('/');
-    // Instead of redirecting from action, return success and let client handle it for better UX (e.g. showing toast)
      return { message: "Medicine added successfully!", success: true };
   } catch (e) {
     return { message: "Failed to add medicine.", success: false, errors: { server: (e as Error).message } };
@@ -78,13 +74,12 @@ export async function updateMedicineAction(
   if (!validatedFields.success) {
     return {
       message: "Validation failed. Please check the fields.",
-      errors: validatedFields.error.flatten().fieldErrors as any, // Cast to any
+      errors: validatedFields.error.flatten().fieldErrors as any, 
       success: false,
     };
   }
   
   try {
-    // Ensure validatedFields.data matches the expected structure for dbUpdateMedicine
     const medicineToUpdate: Partial<Omit<Medicine, 'id'>> = {
       name: validatedFields.data.name,
       potency: validatedFields.data.potency,
@@ -116,7 +111,6 @@ export async function deleteMedicineAction(id: string) {
     revalidatePath('/');
   } catch (e) {
     console.error("Failed to delete medicine:", e);
-    // Handle error, maybe return an error message
   }
 }
 
@@ -136,4 +130,8 @@ export async function fetchMedicinesForSearch(nameQuery?: string, potencyQuery?:
 
 export async function fetchMedicineById(id: string): Promise<Medicine | undefined> {
   return dbGetMedicineById(id);
+}
+
+export async function handleGetUniqueMedicineNames(): Promise<string[]> {
+  return dbGetUniqueMedicineNames();
 }

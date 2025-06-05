@@ -47,6 +47,7 @@ function loadMedicinesFromCSV(): Medicine[] {
       console.info(`The CSV file at ${CSV_FILE_PATH} appears to contain only headers or is empty. Inventory will be empty. Populate the CSV with your medicine data.`);
     }
 
+
     return parsed.data.map((row, index) => {
       const medicineName = row['Medicine Name']?.trim();
       const rawPotencyFromCSV = row['Potency/Power']?.trim();
@@ -70,24 +71,20 @@ function loadMedicinesFromCSV(): Medicine[] {
         const rawPotencyLower = rawPotencyFromCSV.toLowerCase();
         for (const p of POTENCIES) {
           const pLower = p.toLowerCase();
-          // Check if the raw potency string contains the canonical potency value,
-          // potentially as part of a larger string (e.g., "power 200" contains "200").
-          // This regex tries to match pLower as a whole word or common formations like "200c".
           let pattern: RegExp;
-          if (/^\d+$/.test(pLower)) { // pLower is purely numeric e.g. "200"
+          if (/^\d+$/.test(pLower)) { 
             pattern = new RegExp(`\\b${pLower}(c|x)?\\b`, 'i');
-          } else { // pLower has letters e.g. "1m", "3x"
+          } else { 
             pattern = new RegExp(`\\b${pLower}\\b`, 'i');
           }
 
           if (pattern.test(rawPotencyLower)) {
-            extractedPotency = p; // Use the canonical form from POTENCIES array
+            extractedPotency = p; 
             break;
           }
         }
 
         if (!extractedPotency) {
-          // Fallback: if the rawPotencyValue itself is one of the POTENCIES (after case normalization)
           const directMatch = POTENCIES.find(p => p.toLowerCase() === rawPotencyLower);
           if (directMatch) {
             extractedPotency = directMatch;
@@ -97,15 +94,16 @@ function loadMedicinesFromCSV(): Medicine[] {
 
       if (!extractedPotency) {
         console.warn(`Skipping row ${index + 2} in CSV for medicine '${medicineName}' due to unparsable potency: '${rawPotencyFromCSV}'. It does not map to any of [${POTENCIES.join(', ')}].`);
-        return null; // Skip this row as potency is crucial and must match schema
+        return null; 
       }
 
-      const generatedId = `${medicineName}-${extractedPotency}-${boxNumber}-${index}`;
+      const generatedId = `${medicineName.replace(/\s+/g, '-')}-${extractedPotency}-${boxNumber.replace(/\s+/g, '-')}-${index}`;
+
 
       return {
         id: generatedId,
         name: medicineName,
-        potency: extractedPotency, // Store the cleaned, canonical potency
+        potency: extractedPotency, 
         preparation: 'Pellets' as Preparation,
         batchNumber: boxNumber,
         expirationDate: 'N/A',
@@ -123,7 +121,19 @@ function loadMedicinesFromCSV(): Medicine[] {
 
 let medicines: Medicine[] = loadMedicinesFromCSV();
 
+// Function to reload medicines, e.g., if the CSV file changes during development
+export function reloadMedicines() {
+  console.log("Attempting to reload medicines from CSV...");
+  medicines = loadMedicinesFromCSV();
+  console.log(`Medicines reloaded. Count: ${medicines.length}`);
+}
+
+
 export async function getMedicines(): Promise<Medicine[]> {
+  // For development, consider uncommenting to reload on each call if CSV might change often
+  // if (process.env.NODE_ENV === 'development') {
+  //   reloadMedicines();
+  // }
   if (medicines.length === 0 && fs.existsSync(CSV_FILE_PATH)) {
      console.log("Inventory is empty, attempting to reload from CSV (this might happen if CSV was updated after server start).")
      medicines = loadMedicinesFromCSV();
@@ -173,12 +183,18 @@ export async function searchMedicinesByNameAndPotency(nameQuery?: string, potenc
   }
 
   if (potencyQuery && potencyQuery !== 'Any') {
-    // Since medicine.potency is now guaranteed to be one of the canonical POTENCIES,
-    // and potencyQuery from the dropdown will also be one of them,
-    // we can do a direct equality check for more precision.
     const lowerPotencyQuery = potencyQuery.toLowerCase();
     results = results.filter(m => m.potency.toLowerCase() === lowerPotencyQuery);
   }
   
   return JSON.parse(JSON.stringify(results));
+}
+
+export async function getUniqueMedicineNames(): Promise<string[]> {
+  if (medicines.length === 0) {
+    reloadMedicines(); // Attempt to reload if empty, might be first call
+  }
+  const uniqueNames = new Set<string>();
+  medicines.forEach(med => uniqueNames.add(med.name));
+  return Array.from(uniqueNames).sort();
 }
