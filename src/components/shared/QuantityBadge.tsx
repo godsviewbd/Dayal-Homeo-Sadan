@@ -28,7 +28,7 @@ export function QuantityBadge({ quantity, className }: QuantityBadgeProps) {
   return (
     <span
       className={cn(
-        "inline-block min-w-[100px] rounded-full px-3 py-1.5 text-center text-sm font-medium",
+        "inline-block rounded-full px-3 py-1.5 text-center text-sm font-medium", // Removed min-w-[100px]
         colorClasses,
         className
       )}
@@ -39,3 +39,4 @@ export function QuantityBadge({ quantity, className }: QuantityBadgeProps) {
     </span>
   );
 }
+

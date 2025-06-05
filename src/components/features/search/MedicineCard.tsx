@@ -16,10 +16,10 @@ export function MedicineCard({ medicine }: MedicineCardProps) {
       {/* Top section: Name and Badge managed by Flexbox */}
       <div>
         <div className="flex items-start justify-between mb-3">
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex-grow mr-3">
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex-grow min-w-0"> {/* Removed mr-3, added min-w-0 */}
             {medicine.name}
           </h3>
-          <div className="flex-shrink-0 mt-1"> {/* Added mt-1 for slight alignment adjustment with multi-line titles */}
+          <div className="flex-shrink-0 mt-1 ml-2"> {/* Added ml-2 for a small gap */}
             <QuantityBadge quantity={medicine.quantity} />
           </div>
         </div>
