@@ -18,7 +18,7 @@ import { MedicineCardSkeleton } from "./MedicineCardSkeleton";
 import type { Medicine } from "@/types";
 import { POTENCIES } from "@/types";
 import { handleParseHomeopathicQuery, fetchMedicinesForSearch, handleGetUniqueMedicineNames } from "@/lib/actions";
-import { Loader2, SearchIcon, AlertCircle, Wand2, Barcode, Info, ChevronDown } from "lucide-react";
+import { Loader2, SearchIcon, AlertCircle, Wand2, Info, ChevronDown } from "lucide-react"; // Removed Barcode
 import type { ParseHomeopathicQueryOutput } from "@/ai/flows/parse-homeopathic-query";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -41,7 +41,7 @@ export function SearchMedicineClient() {
   const [nameSuggestions, setNameSuggestions] = useState<string[]>([]);
   const [showNameSuggestions, setShowNameSuggestions] = useState(false);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  const [showBarcodeScannerSheet, setShowBarcodeScannerSheet] = useState(false);
+  // const [showBarcodeScannerSheet, setShowBarcodeScannerSheet] = useState(false); // Removed
   const { toast } = useToast();
 
 
@@ -107,7 +107,9 @@ export function SearchMedicineClient() {
     // Client-side check for empty search
     if (searchName === "" && (searchPotency === "Any" || searchPotency === "")) {
       setIsLoading(false);
-      setSearchResults([]);
+      setSearchResults([]); // Keep results empty
+      // Optionally, set a specific error message or clear searchAttempted to show initial message
+      // setError("Please enter a medicine name or select a potency to search.");
       return;
     }
 
@@ -153,14 +155,7 @@ export function SearchMedicineClient() {
     }
   };
 
-  const handleBarcodeScan = () => {
-    setShowBarcodeScannerSheet(true);
-    setTimeout(() => {
-        setValue("query", "Scanned: Arnica Montana 30C");
-        setShowBarcodeScannerSheet(false);
-        handleSubmit(onSubmit)();
-    }, 2000);
-  };
+  // Removed handleBarcodeScan function
 
   const handleSuggestionClick = (suggestion: string) => {
     setValue("query", suggestion);
@@ -172,7 +167,7 @@ export function SearchMedicineClient() {
   const renderResults = () => {
     if (isLoading || isSubmitting) {
       return (
-        <div className="mt-8 space-y-4">
+        <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-3 lg:gap-8">
           <MedicineCardSkeleton />
           <MedicineCardSkeleton />
           <MedicineCardSkeleton />
@@ -236,12 +231,12 @@ export function SearchMedicineClient() {
   return (
     <div className="px-4 pt-6 pb-24 md:px-8">
       <div className="mx-auto w-full max-w-md md:max-w-lg lg:max-w-xl">
-        <div className="rounded-2xl bg-card p-6 shadow-lg md:p-8">
-          <div className="flex items-center mb-6">
-            <SearchIcon className="h-8 w-8 text-primary-500 dark:text-primary-300 mr-3" />
+        <div className="rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-lg md:p-8">
+          <div className="mb-6 flex items-center">
+            <SearchIcon className="mr-3 h-8 w-8 text-teal-500 dark:text-teal-300" />
             <div>
-              <h1 className="text-2xl font-semibold leading-snug text-foreground">Intelligent Medicine Search</h1>
-              <p className="mt-1 text-base text-muted-foreground">
+              <h1 className="text-2xl font-semibold leading-snug text-gray-900 dark:text-gray-100">Intelligent Medicine Search</h1>
+              <p className="mt-1 text-base text-gray-600 dark:text-gray-400">
                 Find medicines by name, potency, or use AI.
               </p>
             </div>
@@ -249,7 +244,7 @@ export function SearchMedicineClient() {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="relative">
-              <Label htmlFor="query" className="sr-only">Search medicine by name or barcode</Label>
+              <Label htmlFor="query" className="sr-only">Search medicine by name</Label>
               <Controller
                 name="query"
                 control={control}
@@ -259,21 +254,14 @@ export function SearchMedicineClient() {
                     type="text"
                     placeholder="e.g., Arnica Montana 30C"
                     {...field}
-                    className="input-base pr-12"
+                    className="input-base" // Removed pr-12
                     onFocus={() => currentQuery && nameSuggestions.length > 0 && setShowNameSuggestions(true)}
                     autoComplete="off"
-                    aria-label="Search medicine by name or barcode"
+                    aria-label="Search medicine by name"
                   />
                 )}
               />
-              <button
-                type="button"
-                onClick={handleBarcodeScan}
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-primary-500 focus:outline-none dark:text-gray-400 dark:hover:text-primary-300"
-                aria-label="Scan barcode"
-              >
-                <Barcode className="h-6 w-6" />
-              </button>
+              {/* Removed Barcode Scan Button */}
 
               {isLoadingSuggestions && (
                 <div className="mt-2 space-y-1 h-[48px] flex flex-col justify-around">
@@ -293,7 +281,7 @@ export function SearchMedicineClient() {
                       key={index}
                       className="cursor-pointer px-4 py-2 text-gray-800 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-600"
                       onClick={() => handleSuggestionClick(suggestion)}
-                      onMouseDown={(e) => e.preventDefault()}
+                      onMouseDown={(e) => e.preventDefault()} // Keep focus on input
                       role="option"
                       aria-selected={false}
                     >
@@ -329,16 +317,13 @@ export function SearchMedicineClient() {
               type="submit"
               disabled={isLoading || isSubmitting}
               className={cn(
-                // Base styles from the ShadCN Button component's default variant will apply for structure and focus.
-                // We explicitly set colors and shape here to match user spec 2.2 for *this specific button*.
-                "h-12 w-full font-medium rounded-lg transition-colors duration-150",
-                "bg-teal-500 hover:bg-teal-600 text-white", // Light mode colors from spec
-                "dark:bg-teal-400 dark:text-gray-900 dark:hover:bg-teal-500", // Dark mode colors from spec
-                "md:w-1/3 md:mx-auto" // Layout constraints
+                "h-12 w-full rounded-lg font-medium transition-colors duration-150 md:w-1/3 md:mx-auto",
+                "bg-teal-500 text-white hover:bg-teal-600",
+                "dark:bg-teal-400 dark:text-gray-900 dark:hover:bg-teal-500"
               )}
             >
               {(isLoading || isSubmitting) ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <Loader2 className="mx-auto h-5 w-5 animate-spin" />
               ) : (
                 <>
                   <SearchIcon className="mr-2 h-5 w-5" />
@@ -350,15 +335,15 @@ export function SearchMedicineClient() {
         </div>
 
         {aiParsedInfo && (
-          <div className="mx-auto mt-6 max-w-md rounded-lg border-l-4 border-primary-500 bg-primary-50 p-5 dark:bg-primary-900/20 md:max-w-lg lg:max-w-xl">
+          <div className="mx-auto mt-6 max-w-md rounded-lg border-l-4 border-teal-500 bg-teal-50 dark:bg-teal-900/20 p-5 md:max-w-lg lg:max-w-xl">
             <div className="flex items-center">
-              <Wand2 className="mr-3 h-6 w-6 text-primary-600 dark:text-primary-300" />
-              <h3 className="text-lg font-semibold text-foreground">AI Query Interpretation</h3>
+              <Wand2 className="mr-3 h-6 w-6 text-teal-600 dark:text-teal-300" />
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">AI Query Interpretation</h3>
             </div>
-            <div className="mt-3 space-y-2 text-sm text-muted-foreground">
-              <p><strong className="text-foreground">Detected Medicine:</strong> {aiParsedInfo.medicineName || "Not specified"}</p>
-              <p><strong className="text-foreground">Detected Potency:</strong> {aiParsedInfo.potency || "Not specified"}</p>
-              <p><strong className="text-foreground">Detected Intent:</strong> {aiParsedInfo.intent || "Not specified"}</p>
+            <div className="mt-3 space-y-2 text-sm text-gray-600 dark:text-gray-400">
+              <p><strong className="font-medium text-gray-800 dark:text-gray-100">Detected Medicine:</strong> {aiParsedInfo.medicineName || "Not specified"}</p>
+              <p><strong className="font-medium text-gray-800 dark:text-gray-100">Detected Potency:</strong> {aiParsedInfo.potency || "Not specified"}</p>
+              <p><strong className="font-medium text-gray-800 dark:text-gray-100">Detected Intent:</strong> {aiParsedInfo.intent || "Not specified"}</p>
             </div>
           </div>
         )}
@@ -368,32 +353,8 @@ export function SearchMedicineClient() {
         </div>
       </div>
 
-      {showBarcodeScannerSheet && (
-        <div
-            className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowBarcodeScannerSheet(false)}
-            aria-hidden="true"
-        />
-      )}
-      <div
-        className={cn(
-          "fixed bottom-0 left-0 right-0 z-[70] h-3/5 transform rounded-t-2xl bg-card p-6 shadow-xl transition-transform duration-300 ease-in-out",
-          showBarcodeScannerSheet ? "translate-y-0" : "translate-y-full"
-        )}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="barcode-scanner-title"
-      >
-        <div className="flex flex-col items-center justify-center h-full">
-            <h2 id="barcode-scanner-title" className="text-xl font-semibold text-foreground mb-4">Mock Barcode Scanner</h2>
-            <div className="w-full max-w-xs h-48 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center mb-4">
-                <Barcode className="h-24 w-24 text-gray-400 dark:text-gray-500" />
-            </div>
-            <p className="text-sm text-muted-foreground mb-2">Simulating barcode scan...</p>
-            <Loader2 className="h-8 w-8 animate-spin text-primary-500" />
-            <Button variant="outline" onClick={() => setShowBarcodeScannerSheet(false)} className="btn-outline mt-6">Cancel</Button>
-        </div>
-      </div>
+      {/* Removed Barcode Scanner Sheet and Overlay */}
     </div>
   );
 }
+
