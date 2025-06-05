@@ -3,9 +3,10 @@ import type { Medicine } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { QuantityBadge } from "@/components/shared/QuantityBadge";
-import { Package, MapPin, CalendarDays, Tag, Layers, Info } from "lucide-react";
+import { Layers, MapPin, Info } from "lucide-react"; // CalendarDays, Tag removed
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface MedicineCardProps {
   medicine: Medicine;
@@ -13,45 +14,37 @@ interface MedicineCardProps {
 
 export function MedicineCard({ medicine }: MedicineCardProps) {
   return (
-    <Card className="flex flex-col h-full shadow-lg hover:shadow-xl transition-shadow duration-300">
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="font-headline text-xl">{medicine.name}</CardTitle>
-            <CardDescription className="flex items-center mt-1">
-              <Layers className="h-4 w-4 mr-1.5 text-muted-foreground" />
+    <Card className="flex flex-col h-full shadow-md hover:shadow-xl card-transition rounded-lg overflow-hidden">
+      <CardHeader className="p-4 border-b bg-card">
+        <div className="flex justify-between items-start gap-3">
+          <div className="flex-grow">
+            <CardTitle className="font-headline text-lg md:text-xl font-medium text-foreground leading-tight">
+              {medicine.name}
+            </CardTitle>
+            <CardDescription className="flex items-center mt-1 text-sm text-muted-foreground">
+              <Layers className="h-4 w-4 mr-1.5 shrink-0" />
               {medicine.potency} - {medicine.preparation}
             </CardDescription>
           </div>
-          <QuantityBadge quantity={medicine.quantity} />
+          <div className="shrink-0 mt-0.5">
+            <QuantityBadge quantity={medicine.quantity} />
+          </div>
         </div>
       </CardHeader>
-      <CardContent className="flex-grow space-y-3 text-sm">
-        <div className="flex items-center">
-          <MapPin className="h-4 w-4 mr-2 text-primary" />
-          <span>Location: {medicine.location}</span>
+      <CardContent className="p-4 flex-grow space-y-3 text-sm">
+        <div className="flex items-center text-foreground/90">
+          <MapPin className="h-4 w-4 mr-2 text-primary shrink-0" />
+          <span>Location: {medicine.location || "N/A"}</span>
         </div>
-        {/* Batch Number and Expiration Date removed as per request */}
         {medicine.supplier && (
-          <div className="flex items-center">
-            <Info className="h-4 w-4 mr-2 text-primary" />
+          <div className="flex items-center text-foreground/90">
+            <Info className="h-4 w-4 mr-2 text-primary shrink-0" />
             <span>Supplier: {medicine.supplier}</span>
           </div>
         )}
-        {medicine.alternateNames && medicine.alternateNames.length > 0 && (
-          <div className="flex items-start">
-            <Tag className="h-4 w-4 mr-2 mt-0.5 text-primary shrink-0" />
-            <div>
-              <span>Alt Names: </span>
-              {medicine.alternateNames.map((altName, index) => (
-                <Badge key={index} variant="secondary" className="mr-1 mb-1">{altName}</Badge>
-              ))}
-            </div>
-          </div>
-        )}
       </CardContent>
-      <CardFooter>
-        <Button variant="outline" size="sm" asChild className="w-full">
+      <CardFooter className="p-4 border-t bg-card">
+        <Button variant="outline" size="sm" asChild className="w-full h-9 btn-transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1">
           <Link href={`/inventory/${medicine.id}/edit`}>View/Edit Details</Link>
         </Button>
       </CardFooter>

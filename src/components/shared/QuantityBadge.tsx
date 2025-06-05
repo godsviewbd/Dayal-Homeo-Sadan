@@ -1,3 +1,4 @@
+
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
@@ -8,34 +9,45 @@ interface QuantityBadgeProps {
 const LOW_STOCK_THRESHOLD = 10;
 const MEDIUM_STOCK_THRESHOLD = 50;
 
+// Using HSL values from the new palette for semantic colors
+const successColor = "hsl(var(--success))"; // hsl(140, 35%, 45%)
+const warningColor = "hsl(var(--warning))"; // hsl(35, 75%, 55%)
+const errorColor = "hsl(var(--destructive))"; // hsl(0, 65%, 50%)
+
+// Define text colors that contrast well with the HSL background colors
+// For HSL, lightness (L) is key. High L = light bg, needs dark text. Low L = dark bg, needs light text.
+// All semantic colors have L around 45-55%, so white text should provide good contrast.
+const textOnSemanticColor = "hsl(0, 0%, 100%)"; // White
+
 export function QuantityBadge({ quantity }: QuantityBadgeProps) {
-  let variant: "default" | "secondary" | "destructive" = "default";
-  let SuffixText = "In Stock";
+  let statusText = "In Stock";
+  let bgColor = successColor; 
+  let textColor = textOnSemanticColor;
 
   if (quantity <= 0) {
-    variant = "destructive";
-    SuffixText = "Out of Stock";
+    statusText = "Out of Stock";
+    bgColor = errorColor;
   } else if (quantity < LOW_STOCK_THRESHOLD) {
-    variant = "destructive"; // Using destructive for low stock (red)
-    SuffixText = "Low Stock";
+    statusText = "Low Stock";
+    bgColor = errorColor; // Using error color for Low Stock for high visibility
   } else if (quantity < MEDIUM_STOCK_THRESHOLD) {
-    variant = "secondary"; // Using secondary for medium stock (yellow-ish, depending on theme)
-    SuffixText = "Medium Stock";
+    statusText = "Medium Stock";
+    bgColor = warningColor;
   }
-  // Default variant (green-ish, depending on theme) for high stock
 
-  const badgeClassName = cn(
-    "text-xs font-semibold",
-    {
-      "bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100 border-green-300 dark:border-green-600": variant === "default" && quantity > 0,
-      "bg-yellow-100 text-yellow-800 dark:bg-yellow-600 dark:text-yellow-100 border-yellow-300 dark:border-yellow-500": variant === "secondary",
-      "bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100 border-red-300 dark:border-red-600": variant === "destructive",
-    }
-  );
-
+  // Using inline styles for dynamic HSL colors as Tailwind class generation is complex for this.
+  // The badge itself will have basic structure from shadcn/ui badge.
   return (
-    <Badge variant={quantity <=0 ? "destructive" : "outline"} className={badgeClassName}>
-      {quantity} {SuffixText}
+    <Badge
+      className={cn(
+        "text-xs font-medium px-2.5 py-1 rounded-full border-transparent",
+        "min-w-[100px] text-center justify-center" // Ensure a minimum width and center text
+      )}
+      style={{ backgroundColor: bgColor, color: textColor }}
+      aria-live="polite"
+      aria-label={`Stock status: ${quantity} ${statusText}`}
+    >
+      {quantity} {statusText}
     </Badge>
   );
 }

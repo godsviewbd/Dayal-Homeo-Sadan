@@ -14,7 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import { QuantityBadge } from "@/components/shared/QuantityBadge";
 import { Edit3, PackageOpen, MapPinIcon } from "lucide-react";
 import { DeleteMedicineButton } from "./DeleteMedicineButton";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 interface MedicineTableProps {
   medicines: Medicine[];
@@ -23,53 +22,52 @@ interface MedicineTableProps {
 export function MedicineTable({ medicines }: MedicineTableProps) {
   if (medicines.length === 0) {
     return (
-      <Card className="mt-4 shadow">
-        <CardHeader>
-           <CardTitle className="font-headline flex items-center"><PackageOpen className="mr-2 h-6 w-6 text-primary" />No Medicines Found</CardTitle>
-           <CardDescription>No medicines match your current filter or the inventory is empty.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-center text-muted-foreground py-8">
-            Try adjusting your search terms. If your inventory is empty, use the "Add New Medicine" button in the header.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="text-center py-12 px-4 md:px-6">
+        <PackageOpen className="mx-auto h-12 w-12 text-primary/70 mb-4" />
+        <h3 className="text-xl font-medium text-foreground mb-1">No Medicines Found</h3>
+        <p className="text-muted-foreground text-sm">
+          Your search returned no results, or your inventory is currently empty.
+        </p>
+        <p className="text-muted-foreground text-sm mt-1">
+          Try adjusting your search terms or <Link href="/inventory/add" className="text-primary hover:underline">add a new medicine</Link>.
+        </p>
+      </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto rounded-md border">
-      <Table>
-        <TableHeader>
+    <div className="overflow-x-auto">
+      <Table className="min-w-full">
+        <TableHeader className="bg-muted/50">
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Potency</TableHead>
-            <TableHead className="hidden md:table-cell">Preparation</TableHead>
-            <TableHead className="text-right">Quantity</TableHead>
-            <TableHead className="hidden md:table-cell">Location (Box No.)</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap sm:w-auto w-2/5">Name</TableHead>
+            <TableHead className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Potency</TableHead>
+            <TableHead className="hidden md:table-cell px-4 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Preparation</TableHead>
+            <TableHead className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground text-right whitespace-nowrap">Quantity</TableHead>
+            <TableHead className="hidden sm:table-cell px-4 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Location</TableHead>
+            <TableHead className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground text-right whitespace-nowrap">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {medicines.map((med) => (
-            <TableRow key={med.id}>
-              <TableCell className="font-medium">{med.name}</TableCell>
-              <TableCell>
-                <Badge variant="outline">{med.potency}</Badge>
+            <TableRow key={med.id} className="hover:bg-muted/30 transition-colors duration-150">
+              <TableCell className="px-4 py-3 font-medium text-foreground whitespace-nowrap sm:w-auto w-2/5">{med.name}</TableCell>
+              <TableCell className="px-4 py-3 whitespace-nowrap">
+                <Badge variant="outline" className="text-xs font-normal border-primary/50 text-primary bg-primary/10">{med.potency}</Badge>
               </TableCell>
-              <TableCell className="hidden md:table-cell">{med.preparation}</TableCell>
-              <TableCell className="text-right">
+              <TableCell className="hidden md:table-cell px-4 py-3 text-muted-foreground whitespace-nowrap">{med.preparation}</TableCell>
+              <TableCell className="px-4 py-3 text-right whitespace-nowrap">
                 <QuantityBadge quantity={med.quantity} />
               </TableCell>
-              <TableCell className="hidden md:table-cell">
+              <TableCell className="hidden sm:table-cell px-4 py-3 text-muted-foreground whitespace-nowrap">
                 <div className="flex items-center">
-                  <MapPinIcon className="mr-1.5 h-4 w-4 text-muted-foreground" />
+                  <MapPinIcon className="mr-1.5 h-4 w-4 text-primary/70 shrink-0" />
                    {med.location}
                 </div>
               </TableCell>
-              <TableCell className="text-right">
+              <TableCell className="px-4 py-3 text-right whitespace-nowrap">
                 <div className="flex justify-end space-x-2">
-                  <Button variant="outline" size="icon" asChild title={`Edit ${med.name}`}>
+                  <Button variant="outline" size="icon" asChild title={`Edit ${med.name}`} className="h-9 w-9 btn-transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1">
                     <Link href={`/inventory/${med.id}/edit`}>
                       <Edit3 className="h-4 w-4" />
                       <span className="sr-only">Edit</span>
