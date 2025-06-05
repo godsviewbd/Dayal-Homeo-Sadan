@@ -1,7 +1,7 @@
 
 import type { Medicine } from "@/types";
 import { QuantityBadge } from "@/components/shared/QuantityBadge";
-import { Layers, MapPin, Info, Pill } from "lucide-react"; // Added Pill icon
+import { Layers, MapPin, Info, Pill } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -13,15 +13,16 @@ interface MedicineCardProps {
 export function MedicineCard({ medicine }: MedicineCardProps) {
   return (
     <div className="card-base relative flex flex-col justify-between cursor-pointer overflow-hidden transition-all duration-200 ease-out hover:scale-[1.01] hover:shadow-xl dark:bg-gray-800 h-full">
-      {/* Top section including name and badge */}
+      {/* Top section: Name and Badge managed by Flexbox */}
       <div>
-        <div className="absolute right-4 top-4 z-10">
-          <QuantityBadge quantity={medicine.quantity} />
+        <div className="flex items-start justify-between mb-3">
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex-grow mr-3">
+            {medicine.name}
+          </h3>
+          <div className="flex-shrink-0 mt-1"> {/* Added mt-1 for slight alignment adjustment with multi-line titles */}
+            <QuantityBadge quantity={medicine.quantity} />
+          </div>
         </div>
-        
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 pr-[200px] mb-3"> {/* Significantly increased padding */}
-          {medicine.name}
-        </h3>
 
         {/* Details Section */}
         <div className="space-y-2 text-sm">
@@ -67,5 +68,3 @@ export function MedicineCard({ medicine }: MedicineCardProps) {
     </div>
   );
 }
-
-    
