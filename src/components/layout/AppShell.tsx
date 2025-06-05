@@ -74,7 +74,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="flex justify-center">
           <Link href="/" className="flex items-center space-x-2" aria-label="দয়াল হোমিও সদন Home">
             <Leaf className="h-5 w-5 text-primary-500 dark:text-primary-300" />
-            <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">দয়াল হোমিও সদন</span>
+            <span className="text-base font-semibold text-gray-900 dark:text-gray-100">দয়াল হোমিও সদন</span>
           </Link>
         </div>
         <div className="flex justify-end">
@@ -114,8 +114,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <ThemeToggleButton className="mr-2 h-10 w-10" />
           <Button
             asChild
-            variant="default" // Explicitly set variant
-            className="h-11 min-h-[44px] px-4 py-2" // Specific sizing. Shadow, rounding, text color comes from variant.
+            variant="default" 
+            className="h-11 min-h-[44px] px-4 py-2" 
           >
             <Link href="/inventory/add">
               <PlusCircle className="mr-2 h-5 w-5" />
@@ -137,7 +137,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <nav className="fixed bottom-0 left-0 right-0 z-50 flex h-14 items-center justify-around border-t border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-900 md:hidden">
         <Link href="/" passHref legacyBehavior>
           <a className={cn(
-            "flex w-1/3 flex-col items-center justify-center py-1 text-xs", // w-1/3 for equal distribution of space for 3 items
+            "flex w-1/3 flex-col items-center justify-center py-1 text-xs", 
             pathname === '/' ? "text-teal-500 dark:text-teal-300" : "text-gray-700 hover:text-teal-500 dark:text-gray-300 dark:hover:text-teal-300"
           )}>
             <Search className="h-6 w-6" />
@@ -145,7 +145,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </a>
         </Link>
         
-        <div className="relative w-14 flex-shrink-0"> {/* Container for FAB, width matches FAB, shrink-0 prevents squishing */}
+        <div className="relative w-14 flex-shrink-0"> 
           <Link href="/inventory/add" passHref legacyBehavior>
             <a 
               aria-label="Add Medicine"
@@ -158,7 +158,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         <Link href="/inventory" passHref legacyBehavior>
           <a className={cn(
-            "flex w-1/3 flex-col items-center justify-center py-1 text-xs", // w-1/3 for equal distribution
+            "flex w-1/3 flex-col items-center justify-center py-1 text-xs", 
             (pathname === '/inventory' || pathname.startsWith('/inventory/')) ? "text-teal-500 dark:text-teal-300" : "text-gray-700 hover:text-teal-500 dark:text-gray-300 dark:hover:text-teal-300"
           )}>
             <Package className="h-6 w-6" />
