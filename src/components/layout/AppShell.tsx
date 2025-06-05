@@ -79,12 +79,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <span className="sr-only">Open menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-3/4 max-w-xs p-0 md:hidden overflow-y-auto">
+            <SheetContent 
+              side="left" 
+              className="w-3/4 max-w-xs p-0 md:hidden overflow-y-auto"
+              aria-describedby="sheet-about-description" // Added for accessibility
+            >
               <SheetHeader className="border-b p-4 sticky top-0 bg-background z-10">
                 <SheetTitle className="text-lg">অ্যাপ পরিচিতি — দয়াল হোমিও সদন</SheetTitle>
               </SheetHeader>
               <div className="p-4 space-y-3 text-sm text-muted-foreground">
-                <p>
+                <p id="sheet-about-description"> {/* Added ID here */}
                   দয়াল হোমিও সদন একটি সহজ, পরিষ্কার এবং বিশ্বস্ত হোমিওপ্যাথিক ওষুধ ব্যবস্থাপনার অ্যাপ। এটি ঘরোয়া চিকিৎসকদের এবং পরিবারের সদস্যদের জন্য তৈরি, যারা তাঁদের নিজস্ব ওষুধের তালিকা ও অবস্থান দ্রুত খুঁজে পেতে চান।
                 </p>
                 <p>এই অ্যাপের মাধ্যমে আপনি—</p>
