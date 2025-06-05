@@ -14,8 +14,8 @@ function loadMedicinesFromCSV(): Medicine[] {
   if (!fs.existsSync(CSV_FILE_PATH)) {
     console.error(`!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`);
     console.error(`DATA: ERROR - CSV file not found at ${CSV_FILE_PATH}.`);
-    console.error(`Please create this file with the following headers (case-sensitive for this check):`);
-    console.error(`"Medicine Name","Potecy/Power","Box Number","Total Number Of Medicine"`);
+    console.error(`Please create this file with the following header (ensure no leading/trailing spaces per field):`);
+    console.error(`Medicine Name,Potecy/Power,Box Number,Total Number Of Medicine`);
     console.error(`The application will proceed with an empty inventory.`);
     console.error(`!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`);
     return [];
@@ -26,29 +26,34 @@ function loadMedicinesFromCSV(): Medicine[] {
     const parsed = Papa.parse<Record<string, string>>(csvFileContent, {
       header: true,
       skipEmptyLines: true,
-      dynamicTyping: false, // Keep as false to handle all inputs as strings initially
-      transformHeader: header => header.trim(), // Trim whitespace from headers
+      dynamicTyping: false, 
+      transformHeader: header => header.trim(), 
     });
 
     if (parsed.errors.length > 0) {
       console.error('DATA: Error parsing CSV:', parsed.errors.map(e => `Row ${e.row}: ${e.message} (${e.code})`).join('\n'));
-      console.warn(`DATA: There were errors parsing ${CSV_FILE_PATH}. Inventory might be incomplete. Please check the file format.`);
+      console.warn(`DATA: There were errors parsing ${CSV_FILE_PATH}. Inventory might be incomplete. Please check the file format and content.`);
     }
     
-    // Use "Potecy/Power" as per user's CSV sample
+    // Expected header based on user's CSV sample
     const expectedHeaders = ['Medicine Name', 'Potecy/Power', 'Box Number', 'Total Number Of Medicine'];
     const actualHeaders = parsed.meta.fields;
     console.log("DATA: Actual CSV Headers found:", actualHeaders);
 
     if (!actualHeaders || !expectedHeaders.every(h => actualHeaders.includes(h))) {
-        console.error(`Error: DATA: CSV file at ${CSV_FILE_PATH} is missing one or more required headers or has unexpected headers.\nRequired (exact match, case-sensitive for this check): [${expectedHeaders.join(', ')}]. \nFound: [${actualHeaders?.join(', ')}]. \nPlease ensure your CSV headers match exactly. Inventory will be empty.`);
+        console.error(`Error: DATA: CSV file at ${CSV_FILE_PATH} is missing one or more required headers or has unexpected headers.\nRequired: [${expectedHeaders.join(', ')}]. \nFound: [${actualHeaders?.join(', ')}]. \nPlease ensure your CSV headers match exactly. Inventory will be empty.`);
         return [];
     }
     
-    if (parsed.data.length === 0 && fs.readFileSync(CSV_FILE_PATH, 'utf-8').trim().split('\n').length <= 1) {
-      console.info(`DATA: The CSV file at ${CSV_FILE_PATH} appears to contain only headers or is empty. Inventory will be empty. Populate the CSV with your medicine data.`);
+    const fileContentLines = fs.readFileSync(CSV_FILE_PATH, 'utf-8').trim().split('\n');
+    if (parsed.data.length === 0 && fileContentLines.length <= 1 && fileContentLines[0].trim() === expectedHeaders.join(',')) {
+      console.info(`DATA: The CSV file at ${CSV_FILE_PATH} contains only the header row. Inventory will be empty. Populate the CSV with your medicine data.`);
       return [];
     }
+    if (parsed.data.length === 0 && fileContentLines.length > 1) {
+        console.warn(`DATA: CSV file at ${CSV_FILE_PATH} has ${fileContentLines.length} lines but PapaParse found 0 data rows. This could indicate formatting issues (e.g. inconsistent delimiters, problematic quotes) or all data rows were invalid.`);
+    }
+    
     console.log(`DATA: Found ${parsed.data.length} data rows in CSV (excluding header). Processing each row...`);
 
     const loadedMedicines = parsed.data.map((row, index) => {
@@ -78,7 +83,7 @@ function loadMedicinesFromCSV(): Medicine[] {
 
       const quantity = parseInt(totalNumberOfMedicineStr, 10);
       if (isNaN(quantity)) {
-         console.warn(`DATA: Invalid quantity '${totalNumberOfMedicineStr}' for medicine '${medicineName}' (Raw Potency: ${rawPotencyFromCSV}) in CSV row ${index + 2}. Defaulting to 0 for this entry, but this row might be problematic.`);
+         console.warn(`DATA: Invalid quantity '${totalNumberOfMedicineStr}' for medicine '${medicineName}' (Raw Potency: ${rawPotencyFromCSV}) in CSV row ${index + 2}. Defaulting to 0 for this entry, this row might be problematic.`);
       }
       
       let extractedPotency: string | undefined = undefined;
@@ -86,28 +91,37 @@ function loadMedicinesFromCSV(): Medicine[] {
         const rawPotencyLower = rawPotencyFromCSV.toLowerCase();
         for (const canonicalP of POTENCIES) { 
           const canonicalPLower = canonicalP.toLowerCase();
-          // This regex looks for the canonical potency as a whole word/number, 
-          // optionally followed by c, x, ch, m, or common terms like "potency", "strength".
-          // It's designed to be flexible for inputs like "200", "200c", "200 C", "1M", "1M strength".
-          const pattern = new RegExp(`\\b${canonicalPLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:c|x|ch|m|\\s*(?:potency|strength))?\\b`, 'i');
+          // Test if the raw potency string *contains* the canonical potency, 
+          // and also check for common suffixes like c, x, ch, m or terms like power/strength.
+          // Example: "200", "200c", "power 200", "200 C", "strength 200" should map to "200"
+          const pattern = new RegExp(`\\b${canonicalPLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:c|x|ch|m|\\s*(?:potency|strength|power))?\\b`, 'i');
+          const simpleInclusionPattern = new RegExp(`\\b${canonicalPLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
 
-          if (pattern.test(rawPotencyLower)) {
-            extractedPotency = canonicalP; 
-            console.log(`DATA: Matched raw potency '${rawPotencyFromCSV}' to CANONICAL '${extractedPotency}' for '${medicineName}' using pattern: ${pattern}`);
+
+          if (pattern.test(rawPotencyLower) || simpleInclusionPattern.test(rawPotencyLower)) {
+            // Prefer exact matches or matches with suffixes if POTENCIES includes them e.g. "30C"
+            // If POTENCIES is just "30", then "30C" will map to "30".
+            let bestMatch = canonicalP;
+            // If POTENCIES contains more specific forms (like "30C"), prefer that if it matches.
+            for (const specificP of POTENCIES) {
+                if (rawPotencyLower.includes(specificP.toLowerCase())) {
+                    bestMatch = specificP; // A more specific match from POTENCIES
+                    if (specificP.toLowerCase() === rawPotencyLower) break; // Exact match is best
+                }
+            }
+            extractedPotency = bestMatch;
+            console.log(`DATA: Matched raw potency '${rawPotencyFromCSV}' to CANONICAL '${extractedPotency}' for '${medicineName}' (using pattern or inclusion).`);
             break;
           }
         }
       }
 
       if (!extractedPotency) {
-        // If direct match fails, try to find any of the POTENCIES numbers/strings within the rawPotencyFromCSV
-        // This is a fallback for cases like "Arnica 30C" where "30C" is the potency.
-        for (const canonicalP of POTENCIES) {
-          if (rawPotencyFromCSV.toUpperCase().includes(canonicalP.toUpperCase())) {
-            extractedPotency = canonicalP;
-            console.log(`DATA: Fallback Matched raw potency '${rawPotencyFromCSV}' to CANONICAL '${extractedPotency}' for '${medicineName}' by simple inclusion.`);
-            break;
-          }
+        // Fallback: if still no match, take the first part of rawPotencyFromCSV if it's in POTENCIES
+        const firstWord = rawPotencyFromCSV.split(" ")[0];
+        if (POTENCIES.map(p => p.toLowerCase()).includes(firstWord.toLowerCase())) {
+            extractedPotency = POTENCIES.find(p => p.toLowerCase() === firstWord.toLowerCase());
+            console.log(`DATA: Fallback Matched raw potency '${rawPotencyFromCSV}' to CANONICAL '${extractedPotency}' for '${medicineName}' using first word.`);
         }
       }
 
@@ -125,13 +139,13 @@ function loadMedicinesFromCSV(): Medicine[] {
         id: generatedId,
         name: medicineName, 
         potency: extractedPotency, 
-        preparation: 'Pellets' as Preparation, // Default, as not in CSV
-        batchNumber: boxNumber, // Using Box Number as Batch Number
-        expirationDate: 'N/A', // Default, as not in CSV
-        location: `Box ${boxNumber}`, // Using Box Number for Location
+        preparation: 'Pellets' as Preparation, 
+        batchNumber: boxNumber, 
+        expirationDate: 'N/A', 
+        location: `Box ${boxNumber}`, 
         quantity: isNaN(quantity) ? 0 : quantity,
-        supplier: undefined, // Default, as not in CSV
-        alternateNames: [], // Default, as not in CSV
+        supplier: undefined, 
+        alternateNames: [], 
       };
       console.log(`DATA: Successfully PARSED medicine for row ${index + 2}: Name='${newMedicineEntry.name}', CanonicalPotency='${newMedicineEntry.potency}', Qty=${newMedicineEntry.quantity}, Batch/Box='${newMedicineEntry.batchNumber}', ID='${newMedicineEntry.id}'`);
       return newMedicineEntry;
@@ -149,12 +163,8 @@ function loadMedicinesFromCSV(): Medicine[] {
   }
 }
 
-// Initialize medicines by loading from CSV.
-// This will only run once when the module is first imported.
 let medicines: Medicine[] = loadMedicinesFromCSV();
 
-// Function to explicitly reload medicines from CSV if needed (e.g., after a file change during development)
-// This function is NOT automatically called by the app after initial load.
 export function reloadMedicines() {
   console.log("DATA: Reloading medicines from CSV...");
   medicines = loadMedicinesFromCSV();
@@ -163,13 +173,11 @@ export function reloadMedicines() {
 
 
 export async function getMedicines(): Promise<Medicine[]> {
-  // If medicines array is empty AND the CSV file exists, try to reload.
-  // This handles cases where initial load might have failed silently or if server restarted.
   if (medicines.length === 0 && fs.existsSync(CSV_FILE_PATH)) {
      console.log("DATA: getMedicines() found empty inventory, attempting to reload from CSV.");
      reloadMedicines();
   }
-  return JSON.parse(JSON.stringify(medicines)); // Return a deep copy
+  return JSON.parse(JSON.stringify(medicines)); 
 }
 
 export async function getMedicineById(id: string): Promise<Medicine | undefined> {
@@ -178,19 +186,17 @@ export async function getMedicineById(id: string): Promise<Medicine | undefined>
      reloadMedicines();
   }
   const medicine = medicines.find(m => m.id === id);
-  return medicine ? JSON.parse(JSON.stringify(medicine)) : undefined; // Return a deep copy
+  return medicine ? JSON.parse(JSON.stringify(medicine)) : undefined; 
 }
 
 export async function addMedicine(medicineData: Omit<Medicine, 'id'>): Promise<Medicine> {
-  // This function adds to the IN-MEMORY store. It does NOT write back to the CSV.
-  const newMedicine: Medicine = { ...medicineData, id: String(Date.now() + Math.random()) }; // Simple unique ID
+  const newMedicine: Medicine = { ...medicineData, id: String(Date.now() + Math.random()) }; 
   medicines.push(newMedicine); 
   console.log(`DATA: Added medicine '${newMedicine.name}' to IN-MEMORY inventory (NOT saved to CSV). Current count: ${medicines.length}`);
   return JSON.parse(JSON.stringify(newMedicine));
 }
 
 export async function updateMedicine(id: string, updates: Partial<Omit<Medicine, 'id'>>): Promise<Medicine | null> {
-  // This function updates the IN-MEMORY store. It does NOT write back to the CSV.
   const index = medicines.findIndex(m => m.id === id);
   if (index === -1) {
     console.warn(`DATA: Update failed. Medicine with ID '${id}' not found in IN-MEMORY inventory.`);
@@ -202,7 +208,6 @@ export async function updateMedicine(id: string, updates: Partial<Omit<Medicine,
 }
 
 export async function deleteMedicine(id: string): Promise<boolean> {
-  // This function deletes from the IN-MEMORY store. It does NOT write back to the CSV.
   const initialLength = medicines.length;
   medicines = medicines.filter(m => m.id !== id); 
   if (medicines.length < initialLength) {
@@ -220,11 +225,11 @@ export async function searchMedicinesByNameAndPotency(nameQuery?: string, potenc
      reloadMedicines();
   }
   
-  let results = [...medicines]; // Start with a copy of all medicines
+  let results = [...medicines]; 
   
   if (nameQuery) {
     const lowerNameQuery = nameQuery.toLowerCase().trim();
-    if (lowerNameQuery) { // Ensure query is not just whitespace
+    if (lowerNameQuery) { 
         results = results.filter(m =>
           m.name.toLowerCase().includes(lowerNameQuery) ||
           (m.alternateNames && m.alternateNames.some(an => an.toLowerCase().includes(lowerNameQuery)))
@@ -233,7 +238,7 @@ export async function searchMedicinesByNameAndPotency(nameQuery?: string, potenc
     }
   }
 
-  if (potencyQuery && potencyQuery !== 'Any') { // 'Any' means no potency filter
+  if (potencyQuery && potencyQuery !== 'Any') { 
     const lowerPotencyQuery = potencyQuery.toLowerCase().trim();
     results = results.filter(m => m.potency.toLowerCase() === lowerPotencyQuery);
     console.log(`DATA: After filtering by potency ("${potencyQuery}"), ${results.length} medicines remaining.`);
@@ -242,10 +247,9 @@ export async function searchMedicinesByNameAndPotency(nameQuery?: string, potenc
   }
   
   console.log(`DATA: Search found ${results.length} medicines matching criteria.`);
-  return JSON.parse(JSON.stringify(results)); // Return a deep copy
+  return JSON.parse(JSON.stringify(results)); 
 }
 
-// Function to get unique medicine names for autocomplete
 export async function getUniqueMedicineNames(): Promise<string[]> {
   if (medicines.length === 0 && fs.existsSync(CSV_FILE_PATH)) {
      console.log("DATA: getUniqueMedicineNames() found empty inventory, attempting to reload from CSV.");
@@ -257,3 +261,4 @@ export async function getUniqueMedicineNames(): Promise<string[]> {
   console.log(`DATA: Found ${sortedNames.length} unique medicine names for autocomplete.`);
   return sortedNames;
 }
+
