@@ -1,132 +1,225 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* New Color Palette based on HSL */
-    --background: 200 20% 97%; /* Light neutral for background */
-    --foreground: 200 15% 25%; /* Dark neutral for text */
-
-    --card: 0 0% 100%; /* White cards for light mode */
-    --card-foreground: 200 15% 25%;
-
+    /* Font variable - System fonts will be primary, PT Sans as fallback if --font-sans is kept */
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    
+    /* Light Mode HSL Variables from Spec */
+    --background: 180 30% 97%; /* #F0F8F7 - Light Desaturated Teal */
+    --foreground: 180 10% 20%; /* Darker Teal/Grey for text */
+    
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 180 10% 20%;
+    
     --popover: 0 0% 100%;
-    --popover-foreground: 200 15% 25%;
+    --popover-foreground: 180 10% 20%;
+    
+    --primary-brand: 174 25% 55%; /* #73AFAF - Sophisticated Teal - Primary brand color */
+    --primary-brand-hover: 174 30% 45%; /* Hover for primary brand */
+    --primary-brand-foreground: 0 0% 100%; /* White text on primary brand */
 
-    --primary: 174 25% 55%; /* Sophisticated Teal */
-    --primary-foreground: 0 0% 100%; /* White text on primary */
+    /* Primary Palette (Teal) HSL - for general UI elements, not necessarily buttons */
+    --primary-50: 174 60% 95%; 
+    --primary-100: 174 50% 90%;
+    --primary-200: 174 40% 80%; 
+    --primary-300: 174 30% 70%; 
+    --primary-400: 174 28% 60%; 
+    --primary-500: 174 25% 55%; /* Main primary */
+    --primary-600: 174 30% 45%; 
+    --primary-700: 174 35% 35%; 
+    --primary-800: 174 40% 25%;
+    --primary-900: 174 45% 15%;
 
-    --secondary: 190 30% 65%; /* Complementary Blue/Green */
-    --secondary-foreground: 190 30% 15%;
 
-    --muted: 200 15% 90%; /* Lighter muted for subtle elements */
-    --muted-foreground: 200 10% 45%; /* Darker muted text */
-
-    --accent: 174 25% 50%; /* Slightly darker/saturated primary for accents */
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 65% 50%; /* Error Red */
+    --secondary: 200 20% 60%; /* Complementary Blue/Green - HSL(200, 20%, 60%) */
+    --secondary-foreground: 0 0% 100%; 
+    
+    --muted: 180 15% 90%; /* Lighter Teal/Grey */
+    --muted-foreground: 180 10% 40%; /* Muted text */
+    
+    --accent: hsl(var(--secondary)); /* Using secondary for accent for now */
+    --accent-foreground: hsl(var(--secondary-foreground));
+    
+    --destructive: 0 65% 50%; /* #FF4136 - Error Red HSL(0, 65%, 50%) */
     --destructive-foreground: 0 0% 100%;
+    
+    --success: 140 35% 45%; /* Success Green HSL(140, 35%, 45%) */
+    --success-foreground: 0 0% 100%;
 
-    /* Semantic colors - not directly mapped to shadcn theme vars, used in specific components */
-    --success: 140 35% 45%;
-    --warning: 35 75% 55%;
-
-    --border: 200 15% 88%;
-    --input: 200 15% 94%;
-    --ring: 174 25% 55%; /* Primary color for rings */
-
+    --warning: 35 75% 55%; /* Warning Amber HSL(35, 75%, 55%) */
+    --warning-foreground: 180 10% 20%; /* Dark text for warning */
+    
+    --border: 180 20% 85%;   /* Lighter border */
+    --input: 180 20% 85%;  
+    --input-bg: 220 14% 96%; /* --color-gray-50: #F9FAFB */
+    --ring: hsl(var(--primary-brand)); /* Primary brand color for rings */
+    
     --radius: 0.5rem; /* Default: 0.5rem */
+    
+    /* Neutrals from spec */
+    --color-gray-50: 220 14% 96%;    /* #F9FAFB */
+    --color-gray-100: 220 13% 91%; /* #F3F4F6 */
+    --color-gray-200: 220 10% 85%;   /* #E5E7EB */
+    --color-gray-300: 218 10% 76%;  /* #D1D5DB */
+    --color-gray-400: 220 9% 55%;  /* #9CA3AF */
+    --color-gray-500: 220 7% 46%;  /* #6B7280 */
+    --color-gray-600: 220 10% 31%;    /* #4B5563 */
+    --color-gray-700: 220 13% 23%; /* #374151 */
+    --color-gray-800: 220 16% 16%; /* #1F2937 */
+    --color-gray-900: 220 22% 11%;   /* #111827 */
 
-    --chart-1: 174 25% 55%;
-    --chart-2: 190 30% 65%;
-    --chart-3: 174 20% 40%;
-    --chart-4: 190 25% 50%;
-    --chart-5: 174 30% 70%;
-
-    --sidebar-background: 200 20% 97%; /* Matches app background */
-    --sidebar-foreground: 200 15% 25%;
-    --sidebar-primary: 174 25% 55%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 174 25% 65%;
-    --sidebar-accent-foreground: 174 25% 15%;
-    --sidebar-border: 200 15% 88%;
-    --sidebar-ring: 174 25% 55%;
+    /* Motion Variables from Spec */
+    --motion-fast: 150ms;
+    --motion-medium: 250ms;
+    --motion-slow: 350ms;
+    --ease-in: cubic-bezier(0.4, 0, 1, 1);
+    --ease-out: cubic-bezier(0, 0, 0.2, 1);
+    --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
-    --background: 180 10% 12%; /* Deep Teal-Gray */
-    --foreground: 180 10% 88%;
-
-    --card: 180 10% 18%; /* Darker cards */
-    --card-foreground: 180 10% 88%;
-
-    --popover: 180 10% 18%;
-    --popover-foreground: 180 10% 88%;
-
-    --primary: 174 25% 60%; /* Slightly lighter primary for dark mode */
-    --primary-foreground: 174 25% 10%;
-
-    --secondary: 190 20% 55%;
-    --secondary-foreground: 190 20% 90%;
-
-    --muted: 180 10% 25%;
-    --muted-foreground: 180 10% 60%;
-
-    --accent: 174 25% 55%;
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 65% 55%; /* Slightly lighter error red for dark */
+    --background: 180 10% 12%; /* Deep Teal-Gray HSL(180, 10%, 12%) */
+    --foreground: 180 20% 88%; /* #D1E0E0 - Light Teal/Grey text */
+    
+    --card: hsl(var(--color-gray-800)); /* #1F2937 */
+    --card-foreground: hsl(var(--color-gray-100));
+    
+    --popover: hsl(var(--color-gray-800));
+    --popover-foreground: hsl(var(--color-gray-100));
+    
+    --primary-brand: 174 25% 65%; /* Lighter Teal for dark mode primary actions */
+    --primary-brand-hover: 174 28% 70%;
+    --primary-brand-foreground: hsl(var(--color-gray-900)); /* Dark text on dark mode primary */
+    
+    /* Dark mode primary palette (adjust if needed) */
+    --primary-300: 174 25% 65%; /* Main DM primary for text/icons */
+    --primary-400: 174 28% 70%; /* Hover for DM primary */
+    
+    --secondary: 200 20% 70%; 
+    --secondary-foreground: hsl(var(--color-gray-900));
+    
+    --muted: 180 10% 20%; /* Darker muted bg */
+    --muted-foreground: 180 15% 60%; /* Muted text */
+    
+    --accent: hsl(var(--secondary));
+    --accent-foreground: hsl(var(--secondary-foreground));
+    
+    --destructive: 0 65% 65%; /* Lighter Red */
     --destructive-foreground: 0 0% 100%;
     
-    --border: 180 10% 30%;
-    --input: 180 10% 22%;
-    --ring: 174 25% 60%;
+    --success: 140 35% 65%; /* Lighter Green */
+    --success-foreground: 0 0% 100%;
 
-    --sidebar-background: 180 10% 12%;
-    --sidebar-foreground: 180 10% 88%;
-    --sidebar-primary: 174 25% 60%;
-    --sidebar-primary-foreground: 174 25% 10%;
-    --sidebar-accent: 174 20% 50%;
-    --sidebar-accent-foreground: 174 20% 90%;
-    --sidebar-border: 180 10% 30%;
-    --sidebar-ring: 174 25% 60%;
+    --warning: 35 75% 65%; /* Lighter Amber */
+    --warning-foreground: hsl(var(--color-gray-900));
+        
+    --border: hsl(var(--color-gray-700)); /* #374151 */
+    --input: hsl(var(--color-gray-700));  
+    --input-bg: hsl(var(--color-gray-800)); /* #1F2937 */
+    --ring: hsl(var(--primary-brand)); 
   }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border; 
   }
   body {
-    @apply bg-background text-foreground font-body antialiased;
-    /* Optimal line heights */
-    line-height: 1.5; /* For body text, 1.4-1.6 is good, 1.5 is a common default */
+    @apply bg-background text-foreground font-sans antialiased; 
+    line-height: 1.5; 
   }
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-headline;
-    line-height: 1.25; /* For headings, 1.2-1.3 is good */
+  
+  /* Heading scale from spec */
+  h1, .h1 { /* Page Title */
+    @apply text-[32px] font-semibold leading-[1.25]; 
   }
-  /* Typographic Hierarchy examples - to be applied via Tailwind classes */
-  /* .text-display (e.g. main titles): 28px-32px */
-  /* .text-headline (e.g. medicine names): 24px-28px medium */
-  /* .text-subheadline (e.g. supporting info): 16px-18px regular */
-  /* .text-body (e.g. general text): 14px-16px regular */
-  /* .text-caption (e.g. detail text): 12px-14px regular */
+  h2, .h2 { /* Card Title */
+    @apply text-[24px] font-semibold leading-[1.3]; 
+  }
+  h3, .h3 { /* Section Heading */
+    @apply text-[20px] font-semibold leading-[1.3]; 
+  }
+  /* Other text sizes via utility classes based on spec:
+     Body Text/Labels: text-base (16px), leading-[1.5]
+     Captions/Help Text: text-sm (14px), leading-[1.4]
+     Tiny Text: text-xs (12px), leading-[1.4]
+  */
 
-  /* Focus states for better accessibility */
   *:focus-visible {
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
+
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 z-[200] p-3 bg-primary text-primary-foreground rounded-md shadow-lg;
+  }
 }
 
-/* Meaningful motion - subtle transitions */
 @layer components {
-  .btn-transition {
-    @apply transition-all duration-200 ease-in-out;
+  /* Base button styles from spec (Section 10) */
+  .btn-primary {
+    @apply inline-flex items-center justify-center h-12 px-6 rounded-full font-medium text-[hsl(var(--primary-brand-foreground))] bg-[hsl(var(--primary-brand))] hover:bg-[hsl(var(--primary-brand-hover))] focus:outline-none focus:ring-2 focus:ring-ring transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed active:scale-95;
   }
-  .card-transition {
-    @apply transition-all duration-200 ease-in-out;
+  .btn-outline {
+    @apply inline-flex items-center justify-center h-12 px-6 rounded-full font-medium border-2 border-[hsl(var(--primary-brand))] text-[hsl(var(--primary-brand))] hover:bg-[hsl(var(--primary-50))] dark:hover:bg-[hsl(var(--primary-900))] transition-all duration-150 disabled:opacity-60 active:scale-95;
   }
+  .btn-destructive {
+    @apply inline-flex items-center justify-center h-12 px-6 rounded-full font-medium bg-destructive text-destructive-foreground hover:bg-red-600 dark:bg-red-700 dark:hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-200 dark:focus:ring-red-900 transition-all duration-150 disabled:opacity-60 active:scale-95;
+  }
+  .btn-ghost { /* For nav links or subtle actions, consistent with ShadCN */
+     @apply inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2;
+  }
+
+  /* Base input styling from spec (Section 11.1) */
+  .input-base {
+    @apply block w-full h-12 px-4 text-base rounded-lg;
+    @apply text-gray-900 dark:text-gray-100;
+    @apply bg-gray-50 dark:bg-gray-800; 
+    @apply border-2 border-gray-200 dark:border-gray-700; 
+    @apply placeholder:text-gray-400 dark:placeholder:text-gray-500; 
+    @apply focus:outline-none focus:border-[hsl(var(--primary-brand))] dark:focus:border-[hsl(var(--primary-brand))] focus:ring-2 focus:ring-ring dark:focus:ring-ring;
+    @apply transition-colors duration-150;
+    @apply disabled:opacity-60 disabled:cursor-not-allowed;
+  }
+  .input-error { /* Added from spec for error state */
+    @apply border-destructive dark:border-red-400 ring-2 ring-red-200 dark:ring-red-900;
+    @apply focus:border-destructive dark:focus:border-red-400 focus:ring-red-200 dark:focus:ring-red-900;
+  }
+
+  /* Base select styling from spec (Section 11.2) */
+  .select-base {
+    @apply input-base pr-10 appearance-none; 
+    /* Custom arrow will be handled by the component itself, ensures proper padding for it */
+  }
+
+  /* Base card styling from spec (Section 12.1) */
+  .card-base {
+    @apply bg-card text-card-foreground rounded-2xl shadow-md p-6 transition-shadow duration-200 ease-out;
+  }
+  .card-base:hover {
+    @apply shadow-lg;
+  }
+
+  /* Skeleton Shimmer from spec (Section 13.2) */
+  .skeleton-shimmer {
+    @apply rounded-md animate-shimmer;
+    background: linear-gradient(90deg, hsl(var(--muted)) 25%, hsl(var(--muted) / 0.7) 50%, hsl(var(--muted)) 75%);
+    background-size: 200% 100%;
+  }
+  
+
+  /* Active Nav Link Indicator for Desktop Header from spec (Section 1.2) */
+  .nav-link-desktop { 
+    @apply relative pb-1; /* Adjusted pb-1 from pb-2 for better visual balance */
+  }
+  .nav-link-desktop.active::after {
+    content: "";
+    @apply absolute bottom-0 left-0 w-full h-0.5 bg-[hsl(var(--primary-brand))] rounded-full; 
+  }
+
 }
+
+    

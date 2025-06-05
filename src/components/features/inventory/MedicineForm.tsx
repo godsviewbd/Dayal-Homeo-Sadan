@@ -8,8 +8,8 @@ import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { MedicineFormState } from "@/lib/actions";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button"; // Will use new styles
+import { Input } from "@/components/ui/input";   // Will use new styles
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -17,10 +17,11 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+} from "@/components/ui/select"; // Will use new styles
+// Card components are used but styling comes from globals/tailwind
 import { useToast } from "@/hooks/use-toast";
-import { SaveIcon, Loader2 } from "lucide-react";
+import { SaveIcon, Loader2, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface MedicineFormProps {
   action: (
@@ -46,15 +47,15 @@ export function MedicineForm({ action, initialData, formType }: MedicineFormProp
     handleSubmit,
     control,
     formState: { errors },
-    reset,
+    reset, // Keep reset if needed for complex scenarios, not explicitly in spec for this redesign
   } = useForm<MedicineFormData>({
-    resolver: zodResolver(medicineSchema),
+    resolver: zodResolver(medicineSchema), // medicineSchema should be simplified based on prior request
     defaultValues: {
       name: initialData?.name || "",
       potency: initialData?.potency || "",
       preparation: initialData?.preparation || "Liquid",
       location: initialData?.location || "",
-      quantity: initialData?.quantity || 0,
+      quantity: initialData?.quantity || 0, // Ensure 0 is a valid default if min is 0 or 1
       supplier: initialData?.supplier || "",
     },
   });
@@ -64,7 +65,7 @@ export function MedicineForm({ action, initialData, formType }: MedicineFormProp
       toast({
         title: formType === "add" ? "Medicine Added" : "Medicine Updated",
         description: state.message,
-        variant: "default", // Explicitly default, can be success if you add a success variant
+        variant: "default", // TODO: use success variant for toasts if added
       });
       router.push("/inventory");
     } else if (state?.message && !state.success) {
@@ -76,114 +77,173 @@ export function MedicineForm({ action, initialData, formType }: MedicineFormProp
     }
   }, [state, router, toast, formType]);
 
+  const renderErrorMessage = (fieldName: keyof MedicineFormData | 'server') => {
+    const clientError = errors[fieldName as keyof MedicineFormData]?.message;
+    const serverError = state?.errors?.[fieldName as keyof typeof state.errors]?.[0];
+    
+    if (clientError || serverError) {
+      return (
+        <p className="mt-1 text-sm text-red-600 dark:text-red-300" role="alert">
+          {clientError || serverError}
+        </p>
+      );
+    }
+    return null;
+  };
+
 
   return (
-    <Card className="w-full max-w-2xl mx-auto shadow-xl overflow-hidden">
-      <CardHeader className="p-4 md:p-6 border-b bg-card">
-        <CardTitle className="font-headline text-2xl text-foreground">
-          {formType === "add" ? "Add New Medicine" : "Edit Medicine"}
-        </CardTitle>
-        <CardDescription className="text-muted-foreground mt-1 text-sm">
-          {formType === "add"
-            ? "Fill in the details to add a new medicine to the inventory."
-            : `Editing: ${initialData?.name || "Medicine"}`}
-        </CardDescription>
-      </CardHeader>
-      <form onSubmit={handleSubmit((data) => {
-        const formData = new FormData();
-        Object.entries(data).forEach(([key, value]) => {
-          if (value !== undefined && value !== null) {
-            formData.append(key, String(value));
-          }
-        });
-        startTransition(() => {
-          formAction(formData);
-        });
-      })}>
-        <CardContent className="p-4 md:p-6 space-y-6 md:space-y-8"> {/* Increased vertical spacing */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6"> {/* Consistent gap */}
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-sm font-medium text-foreground">Medicine Name</Label>
-              <Input id="name" {...register("name")} placeholder="e.g., Arnica Montana" className="h-11 text-base focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1" />
-              {errors.name && <p className="text-xs text-destructive mt-1">{errors.name.message}</p>}
-              {(state?.errors?.name && !errors.name) && <p className="text-xs text-destructive mt-1">{state.errors.name[0]}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="potency" className="text-sm font-medium text-foreground">Potency</Label>
-               <Controller
-                name="potency"
-                control={control}
-                render={({ field }) => (
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <SelectTrigger id="potency" className="h-11 text-base focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1">
-                      <SelectValue placeholder="Select potency" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {POTENCIES.map((p) => (
-                        <SelectItem key={p} value={p}>{p}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.potency && <p className="text-xs text-destructive mt-1">{errors.potency.message}</p>}
-              {(state?.errors?.potency && !errors.potency) && <p className="text-xs text-destructive mt-1">{state.errors.potency[0]}</p>}
-            </div>
-          </div>
+    <div className="px-4 pt-6 pb-24 md:px-8">
+      <div className="mx-auto max-w-lg rounded-2xl bg-white p-6 shadow-lg dark:bg-gray-800 md:p-8">
+        <div className="mb-6">
+          <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">
+            {formType === "add" ? "Add New Medicine" : "Edit Medicine"}
+          </h1>
+          <p className="mt-2 text-base text-gray-600 dark:text-gray-400">
+            {formType === "add"
+              ? "Fill in the details to add a new medicine."
+              : `Editing: ${initialData?.name || "Medicine"}`}
+          </p>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="preparation" className="text-sm font-medium text-foreground">Preparation</Label>
-              <Controller
-                name="preparation"
-                control={control}
-                render={({ field }) => (
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <SelectTrigger id="preparation" className="h-11 text-base focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1">
-                      <SelectValue placeholder="Select preparation" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PREPARATIONS.map((p) => (
-                        <SelectItem key={p} value={p}>{p}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
+        <form onSubmit={handleSubmit((data) => {
+          const formData = new FormData();
+          Object.entries(data).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+              formData.append(key, String(value));
+            }
+          });
+          startTransition(() => {
+            formAction(formData);
+          });
+        })}>
+          <div className="grid grid-cols-1 gap-x-6 gap-y-6 md:grid-cols-2">
+            
+            <div className="md:col-span-2"> {/* Medicine Name spans full width if alone, or adjust grid */}
+              <Label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Medicine Name</Label>
+              <Input 
+                id="name" 
+                {...register("name")} 
+                placeholder="e.g., Arnica Montana 30C" 
+                className={cn("input-base mt-1", errors.name || state?.errors?.name ? "input-error" : "")}
+                aria-describedby="name-error"
               />
-              {errors.preparation && <p className="text-xs text-destructive mt-1">{errors.preparation.message}</p>}
-              {(state?.errors?.preparation && !errors.preparation) && <p className="text-xs text-destructive mt-1">{state.errors.preparation[0]}</p>}
+              {renderErrorMessage('name')}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="quantity" className="text-sm font-medium text-foreground">Quantity</Label>
-              <Input id="quantity" type="number" {...register("quantity", { valueAsNumber: true })} placeholder="e.g., 100" className="h-11 text-base focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1" />
-              {errors.quantity && <p className="text-xs text-destructive mt-1">{errors.quantity.message}</p>}
-              {(state?.errors?.quantity && !errors.quantity) && <p className="text-xs text-destructive mt-1">{state.errors.quantity[0]}</p>}
+
+            <div>
+              <Label htmlFor="potency" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Potency</Label>
+              <div className="relative mt-1">
+                <Controller
+                  name="potency"
+                  control={control}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <SelectTrigger 
+                        id="potency" 
+                        className={cn("select-base", errors.potency || state?.errors?.potency ? "input-error" : "")}
+                        aria-label="Select potency"
+                        aria-describedby="potency-error"
+                      >
+                        <SelectValue placeholder="Select potency (e.g., 30C, 200)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {POTENCIES.map((p) => (
+                          <SelectItem key={p} value={p}>{p}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+              {renderErrorMessage('potency')}
+            </div>
+            
+            <div>
+              <Label htmlFor="preparation" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Preparation</Label>
+               <div className="relative mt-1">
+                <Controller
+                  name="preparation"
+                  control={control}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} defaultValue={field.value || "Liquid"}>
+                      <SelectTrigger 
+                        id="preparation" 
+                        className={cn("select-base", errors.preparation || state?.errors?.preparation ? "input-error" : "")}
+                        aria-label="Select preparation"
+                        aria-describedby="preparation-error"
+                      >
+                        <SelectValue placeholder="Select form (e.g., Pellets, Liquid)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PREPARATIONS.map((p) => (
+                          <SelectItem key={p} value={p}>{p}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+              {renderErrorMessage('preparation')}
+            </div>
+
+            <div>
+              <Label htmlFor="quantity" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Quantity</Label>
+              <Input 
+                id="quantity" 
+                type="number" 
+                inputMode="numeric"
+                min="0" // Allow 0 for out of stock
+                {...register("quantity", { valueAsNumber: true })} 
+                placeholder="Enter amount (0-10000)" 
+                className={cn("input-base mt-1", errors.quantity || state?.errors?.quantity ? "input-error" : "")}
+                aria-describedby="quantity-error"
+              />
+              {renderErrorMessage('quantity')}
+            </div>
+            
+            <div>
+              <Label htmlFor="location" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Location (Box Number)</Label>
+              <Input 
+                id="location" 
+                {...register("location")} 
+                placeholder="e.g., Box 15, Shelf A" 
+                className={cn("input-base mt-1", errors.location || state?.errors?.location ? "input-error" : "")}
+                aria-describedby="location-error"
+              />
+              {renderErrorMessage('location')}
+            </div>
+            
+            <div className="md:col-span-2">
+              <Label htmlFor="supplier" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Supplier (Optional)</Label>
+              <Input 
+                id="supplier" 
+                {...register("supplier")} 
+                placeholder="e.g., Boiron, SBL" 
+                className="input-base mt-1" // No error class needed for optional field unless specifically validated
+              />
+              {/* No error message for supplier as it's optional and not strictly validated in schema for existence */}
             </div>
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="location" className="text-sm font-medium text-foreground">Location (Box Number)</Label>
-            <Input id="location" {...register("location")} placeholder="e.g., B28, A1, Drawer 3" className="h-11 text-base focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1" />
-            {errors.location && <p className="text-xs text-destructive mt-1">{errors.location.message}</p>}
-            {(state?.errors?.location && !errors.location) && <p className="text-xs text-destructive mt-1">{state.errors.location[0]}</p>}
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="supplier" className="text-sm font-medium text-foreground">Supplier (Optional)</Label>
-            <Input id="supplier" {...register("supplier")} placeholder="e.g., Boiron, SBL" className="h-11 text-base focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1" />
-            {errors.supplier && <p className="text-xs text-destructive mt-1">{errors.supplier.message}</p>}
-          </div>
+          {state?.errors?.server && (
+            <div className="mt-4 rounded-md bg-red-50 p-3 dark:bg-red-900/20" role="alert">
+              <p className="text-sm text-red-600 dark:text-red-300">{state.errors.server}</p>
+            </div>
+          )}
 
-           {state?.errors?.server && <p className="text-sm text-destructive mt-1 bg-destructive/10 p-3 rounded-md">{state.errors.server}</p>}
-
-        </CardContent>
-        <CardFooter className="p-4 md:p-6 flex justify-end bg-muted/30 border-t">
-          <Button type="submit" disabled={isActionPending} className="h-11 text-base min-w-[150px] btn-transition shadow-sm hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-            {isActionPending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <SaveIcon className="mr-2 h-5 w-5" />}
-            {formType === "add" ? "Add Medicine" : "Save Changes"}
-          </Button>
-        </CardFooter>
-      </form>
-    </Card>
+          <div className="mt-8 flex justify-end">
+            <Button 
+              type="submit" 
+              disabled={isActionPending} 
+              className="btn-primary h-12 min-w-[150px] !rounded-full px-6 text-base"
+            >
+              {isActionPending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <SaveIcon className="mr-2 h-5 w-5" />}
+              {formType === "add" ? "Add Medicine" : "Save Changes"}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }

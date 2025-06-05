@@ -1,11 +1,9 @@
 
 import type { Medicine } from "@/types";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { QuantityBadge } from "@/components/shared/QuantityBadge";
-import { Layers, MapPin, Info } from "lucide-react"; // CalendarDays, Tag removed
+import { Layers, MapPin, Info } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"; // Will use new .btn-primary etc.
 import { cn } from "@/lib/utils";
 
 interface MedicineCardProps {
@@ -14,40 +12,45 @@ interface MedicineCardProps {
 
 export function MedicineCard({ medicine }: MedicineCardProps) {
   return (
-    <Card className="flex flex-col h-full shadow-md hover:shadow-xl card-transition rounded-lg overflow-hidden">
-      <CardHeader className="p-4 border-b bg-card">
-        <div className="flex justify-between items-start gap-3">
-          <div className="flex-grow">
-            <CardTitle className="font-headline text-lg md:text-xl font-medium text-foreground leading-tight">
-              {medicine.name}
-            </CardTitle>
-            <CardDescription className="flex items-center mt-1 text-sm text-muted-foreground">
-              <Layers className="h-4 w-4 mr-1.5 shrink-0" />
-              {medicine.potency} - {medicine.preparation}
-            </CardDescription>
-          </div>
-          <div className="shrink-0 mt-0.5">
-            <QuantityBadge quantity={medicine.quantity} />
-          </div>
+    <div className="card-base relative cursor-pointer overflow-hidden transition-all duration-200 ease-out hover:scale-[1.01] hover:shadow-xl dark:bg-gray-800">
+      <div className="absolute right-4 top-4 z-10">
+        <QuantityBadge quantity={medicine.quantity} />
+      </div>
+      
+      <div className="p-6"> {/* Content padding now part of card-base */}
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 pr-20"> {/* Padding right to avoid overlap with badge */}
+          {medicine.name}
+        </h3>
+
+        <div className="mt-2 flex items-center space-x-2">
+          <Layers className="h-5 w-5 text-primary-500 dark:text-primary-300" />
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-400">
+            {medicine.potency} – {medicine.preparation}
+          </span>
         </div>
-      </CardHeader>
-      <CardContent className="p-4 flex-grow space-y-3 text-sm">
-        <div className="flex items-center text-foreground/90">
-          <MapPin className="h-4 w-4 mr-2 text-primary shrink-0" />
-          <span>Location: {medicine.location || "N/A"}</span>
-        </div>
-        {medicine.supplier && (
-          <div className="flex items-center text-foreground/90">
-            <Info className="h-4 w-4 mr-2 text-primary shrink-0" />
-            <span>Supplier: {medicine.supplier}</span>
+
+        <div className="mt-4 space-y-2">
+          <div className="flex items-center text-sm text-gray-700 dark:text-gray-300">
+            <MapPin className="mr-2 h-5 w-5 text-primary-500 dark:text-primary-300" />
+            <span>Box: {medicine.location || "N/A"}</span>
           </div>
-        )}
-      </CardContent>
-      <CardFooter className="p-4 border-t bg-card">
-        <Button variant="outline" size="sm" asChild className="w-full h-9 btn-transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1">
-          <Link href={`/inventory/${medicine.id}/edit`}>View/Edit Details</Link>
+          {medicine.supplier && (
+            <div className="flex items-center text-sm text-gray-700 dark:text-gray-300">
+              <Info className="mr-2 h-5 w-5 text-gray-500 dark:text-gray-400" />
+              <span>Supplier: {medicine.supplier}</span>
+            </div>
+          )}
+        </div>
+
+        <Button 
+          variant="outline" 
+          size="sm" 
+          asChild 
+          className="btn-outline mt-6 h-10 w-full !rounded-full border-primary-500 text-primary-500 hover:bg-primary-50 dark:border-primary-300 dark:text-primary-300 dark:hover:bg-primary-900/20"
+        >
+          <Link href={`/inventory/${medicine.id}/edit`}>View / Edit</Link>
         </Button>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 }

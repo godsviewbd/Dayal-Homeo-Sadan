@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { AppShell } from '@/components/layout/AppShell';
@@ -16,11 +17,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
+        {/* PT Sans is defined as --font-sans in globals.css, loaded via Tailwind config */}
+        {/* No need for direct Google Fonts link if relying on system fonts or already configured in Tailwind */}
       </head>
-      <body className="font-body antialiased">
+      <body className="font-sans antialiased bg-background text-foreground">
+         <a href="#main-content" className="skip-link">Skip to content</a>
         <AppShell>{children}</AppShell>
         <Toaster />
       </body>

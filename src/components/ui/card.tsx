@@ -1,6 +1,5 @@
 
 import * as React from "react"
-
 import { cn } from "@/lib/utils"
 
 const Card = React.forwardRef<
@@ -10,7 +9,10 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "rounded-lg border bg-card text-card-foreground", // Removed shadow-sm, will be applied contextually
+      // Applying .card-base styles from globals.css or directly here
+      "rounded-2xl bg-card text-card-foreground shadow-md transition-shadow duration-[var(--motion-medium)] ease-out hover:shadow-lg",
+      // Default padding from spec, can be overridden by specific card instances
+      // "p-6", // Removing default padding from base Card to allow more specific control in implementations
       className
     )}
     {...props}
@@ -24,20 +26,23 @@ const CardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex flex-col space-y-1.5 p-4 md:p-6", className)} // Default padding
+    // Padding specific to card implementations based on context (e.g., form card p-6/p-8 vs search card header)
+    className={cn("flex flex-col space-y-1.5", className)} 
     {...props}
   />
 ))
 CardHeader.displayName = "CardHeader"
 
 const CardTitle = React.forwardRef<
-  HTMLParagraphElement, // Changed to p for semantic correctness as it's used as such.
-  React.HTMLAttributes<HTMLHeadingElement> // Still HTMLHeadingElement for props typing
+  HTMLParagraphElement, 
+  React.HTMLAttributes<HTMLHeadingElement>
 >(({ className, ...props }, ref) => (
   <p // Using <p> but styled as a title
     ref={ref}
     className={cn(
-      "text-xl font-semibold leading-none tracking-tight md:text-2xl", // Typographic hierarchy
+      // Example: text-xl font-semibold leading-none tracking-tight md:text-2xl
+      // Specific title styling will be applied in components using CardTitle
+      "font-semibold leading-none tracking-tight", 
       className
     )}
     {...props}
@@ -47,11 +52,13 @@ CardTitle.displayName = "CardTitle"
 
 
 const CardDescription = React.forwardRef<
-  HTMLParagraphElement, // Changed to p
+  HTMLParagraphElement, 
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => (
-  <p // Using <p>
+  <p 
     ref={ref}
+    // Example: text-sm text-muted-foreground
+    // Specific description styling will be applied in components using CardDescription
     className={cn("text-sm text-muted-foreground", className)}
     {...props}
   />
@@ -62,7 +69,8 @@ const CardContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("p-4 md:p-6 pt-0", className)} {...props} /> // Default padding
+  // Padding specific to card implementations
+  <div ref={ref} className={cn("", className)} {...props} /> 
 ))
 CardContent.displayName = "CardContent"
 
@@ -70,9 +78,10 @@ const CardFooter = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
+  // Padding specific to card implementations
   <div
     ref={ref}
-    className={cn("flex items-center p-4 md:p-6 pt-0", className)} // Default padding
+    className={cn("flex items-center", className)} 
     {...props}
   />
 ))
