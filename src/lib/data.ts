@@ -7,7 +7,7 @@ import { POTENCIES } from '@/types';
 
 const CSV_FILE_PATH = path.join(process.cwd(), 'src', 'data', 'medicine_name.csv');
 // This header order and naming must match your CSV file exactly for reading and writing.
-// Note: User's CSV uses "Potecy/Power"
+// User's CSV uses "Potecy/Power"
 const CSV_HEADERS = ['Medicine Name', 'Potecy/Power', 'Box Number', 'Total Number Of Medicine'];
 
 // Function to persist the current in-memory medicines array to the CSV file
@@ -17,7 +17,7 @@ async function persistMedicinesToCSV(medicinesToPersist: Medicine[]): Promise<vo
   try {
     const csvDataRows = medicinesToPersist.map(med => ({
       [CSV_HEADERS[0]]: med.name,
-      [CSV_HEADERS[1]]: med.potency, // This will be the canonical potency string
+      [CSV_HEADERS[1]]: med.potency, 
       [CSV_HEADERS[2]]: med.location,
       [CSV_HEADERS[3]]: med.quantity,
     }));
@@ -32,6 +32,7 @@ async function persistMedicinesToCSV(medicinesToPersist: Medicine[]): Promise<vo
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error(`DATA: CRITICAL failure while writing medicines to CSV: ${errorMessage}`);
+    // Make sure this error propagates so the user action can report it.
     throw new Error(`Failed to persist data to CSV: ${errorMessage}`);
   }
 }
@@ -58,22 +59,19 @@ function loadMedicinesFromCSV(): Medicine[] {
       dynamicTyping: false, 
       transformHeader: header => header.trim(), 
     });
-
-    if (parsed.errors.length > 0) {
-      parsed.errors.forEach(err => {
-        console.error(`DATA: CSV Parsing Error - Code: ${err.code}, Message: ${err.message}, Row: ${err.row}`);
-      });
-      console.warn(`DATA: There were errors parsing ${CSV_FILE_PATH}. Inventory might be incomplete. Please check the file format and content.`);
-    }
     
     const actualHeaders = parsed.meta.fields;
+    if (!actualHeaders) {
+        console.error(`Error: DATA: CSV file at ${CSV_FILE_PATH} appears to be empty or has no headers. Inventory will be empty.`);
+        return [];
+    }
     console.log("DATA: Actual CSV Headers found:", actualHeaders);
 
-    const missingHeaders = CSV_HEADERS.filter(expectedHeader => !actualHeaders?.includes(expectedHeader));
+    const missingHeaders = CSV_HEADERS.filter(expectedHeader => !actualHeaders.includes(expectedHeader));
     if (missingHeaders.length > 0) {
-        console.error(`Error: DATA: CSV file at ${CSV_FILE_PATH} is missing required headers or has unexpected headers.`);
-        console.error(`Required (exact match): [${CSV_HEADERS.join(', ')}].`);
-        console.error(`Found: [${actualHeaders?.join(', ')}].`);
+        console.error(`Error: DATA: CSV file at ${CSV_FILE_PATH} is missing one or more required headers or has unexpected headers.`);
+        console.error(`Required (exact match, case-sensitive for this check): [${CSV_HEADERS.join(', ')}].`);
+        console.error(`Found: [${actualHeaders.join(', ')}].`);
         console.error(`Missing: [${missingHeaders.join(', ')}].`);
         console.error(`Please ensure your CSV headers match exactly. Inventory will be empty.`);
         return [];
@@ -91,8 +89,6 @@ function loadMedicinesFromCSV(): Medicine[] {
     console.log(`DATA: Found ${parsed.data.length} data rows in CSV (excluding header). Processing each row...`);
 
     const loadedMedicines = parsed.data.map((row, index) => {
-      // console.log(`\nDATA: Processing CSV row ${index + 2}: Original data =`, JSON.stringify(row));
-
       const medicineName = row[CSV_HEADERS[0]]?.trim();
       const rawPotencyFromCSV = row[CSV_HEADERS[1]]?.trim(); // Uses 'Potecy/Power'
       const boxNumber = row[CSV_HEADERS[2]]?.trim();
@@ -126,9 +122,13 @@ function loadMedicinesFromCSV(): Medicine[] {
 
       for (const canonicalP of POTENCIES) {
         const canonicalPLower = canonicalP.toLowerCase();
-        const pattern = new RegExp(`\\b${canonicalPLower.replace(/(\d+)/, '$1(?:c|x|ch|ck|m|k)?')}\\b`, 'i');
-        if (pattern.test(rawPotencyLower)) {
-            extractedPotency = canonicalP;
+        // Try to match patterns like "200", "200c", "200x", "1m", "10M CH" etc.
+        const pattern = new RegExp(`\\b(${canonicalPLower.replace(/(\d+)/, '$1')})(c|ch|ck|x|m|k|potency|power)?\\b`, 'i');
+        const match = rawPotencyLower.match(pattern);
+
+        if (match && (match[1] === canonicalPLower || POTENCIES.map(p => p.toLowerCase()).includes(match[1]))) {
+            extractedPotency = POTENCIES.find(p => p.toLowerCase() === canonicalPLower || p.toLowerCase() === match[1]) || canonicalP;
+            // console.log(`DATA: Matched raw potency '${rawPotencyFromCSV}' to CANONICAL '${extractedPotency}' using pattern for ${canonicalP}`);
             break;
         }
       }
@@ -137,7 +137,17 @@ function loadMedicinesFromCSV(): Medicine[] {
          const directMatch = POTENCIES.find(p => p.toLowerCase() === rawPotencyLower);
          if (directMatch) {
            extractedPotency = directMatch;
+          //  console.log(`DATA: Matched raw potency '${rawPotencyFromCSV}' to CANONICAL '${extractedPotency}' by direct match.`);
          }
+      }
+
+      if (!extractedPotency) {
+        // Fallback: check if any of the canonical potencies are simply contained in the string
+        const foundPotency = POTENCIES.find(p => rawPotencyLower.includes(p.toLowerCase()));
+        if (foundPotency) {
+            extractedPotency = foundPotency;
+            // console.log(`DATA: Matched raw potency '${rawPotencyFromCSV}' to CANONICAL '${extractedPotency}' by simple inclusion.`);
+        }
       }
 
       if (!extractedPotency) {
@@ -154,11 +164,12 @@ function loadMedicinesFromCSV(): Medicine[] {
         id: generatedId,
         name: medicineName, 
         potency: extractedPotency, 
-        preparation: 'Liquid' as Preparation, // Defaulting to Liquid as per user request
+        preparation: 'Liquid' as Preparation, // Defaulting to Liquid
         location: boxNumber,
         quantity: quantity, 
         supplier: undefined, 
       };
+      // console.log(`DATA: Successfully parsed medicine for row ${index + 2}: ${JSON.stringify(newMedicineEntry)}`);
       return newMedicineEntry;
     }).filter(Boolean) as Medicine[];
     
@@ -174,32 +185,9 @@ function loadMedicinesFromCSV(): Medicine[] {
   }
 }
 
-let medicines: Medicine[] = loadMedicinesFromCSV();
-
-export function ensureCsvFileExists() {
-  // This function primarily serves to inform the user if the CSV is missing.
-  // It does NOT create or modify the file.
-  if (!fs.existsSync(CSV_FILE_PATH)) {
-    console.error(`!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`);
-    console.error(`DATA: ERROR - CSV file not found at ${CSV_FILE_PATH}.`);
-    console.error(`Please create this file with the header (ensure exact match for '${CSV_HEADERS[1]}'):`);
-    console.error(CSV_HEADERS.join(','));
-    console.error(`The application will proceed with an empty inventory if the file is not present at startup.`);
-    console.error(`!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`);
-  }
-}
-ensureCsvFileExists();
-
-export function reloadMedicines() {
-  console.log("DATA: Reloading medicines from CSV...");
-  medicines = loadMedicinesFromCSV();
-  console.log(`DATA: Medicines reloaded. Current count in memory: ${medicines.length}`);
-}
-
+let medicines: Medicine[] = loadMedicinesFromCSV(); // Initial load at module startup
 
 export async function getMedicines(): Promise<Medicine[]> {
-  // Always return the current in-memory state.
-  // The 'medicines' array is updated by add/update/delete operations.
   return JSON.parse(JSON.stringify(medicines)); 
 }
 
@@ -225,7 +213,7 @@ export async function updateMedicine(id: string, updates: Partial<Omit<Medicine,
   const oldQuantity = medicines[index].quantity;
   medicines[index] = { ...medicines[index], ...updates }; 
   console.log(`DATA: IN-MEMORY update for ID '${id}' (${medicines[index].name}). Quantity changed from ${oldQuantity} to ${medicines[index].quantity}. Persisting to CSV...`);
-  await persistMedicinesToCSV(medicines); 
+  await persistMedicinesToCSV(medicines); // This writes the updated 'medicines' array
   return JSON.parse(JSON.stringify(medicines[index]));
 }
 
@@ -243,15 +231,18 @@ export async function deleteMedicine(id: string): Promise<boolean> {
 
 export async function searchMedicinesByNameAndPotency(nameQuery?: string, potencyQuery?: string): Promise<Medicine[]> {
   console.log(`DATA: Search initiated. Forcing reload from CSV for search consistency. Name Query: "${nameQuery}", Potency Query: "${potencyQuery}"`);
+  
   // Always load fresh data from CSV for search operations to ensure consistency
   const currentMedicinesFromCSV = loadMedicinesFromCSV();
   
+  // CRITICAL DIAGNOSTIC LOG:
   if (nameQuery && currentMedicinesFromCSV && currentMedicinesFromCSV.length > 0) {
     const specificMed = currentMedicinesFromCSV.find(m => m.name.toLowerCase().includes(nameQuery.toLowerCase()));
     if (specificMed) {
-        console.log(`DATA: In search, for query "${nameQuery}", medicine "${specificMed.name}" (ID: ${specificMed.id}) has QTY: ${specificMed.quantity} as loaded from CSV.`);
+        // This log will show the quantity of the FIRST medicine matching the nameQuery, as read from CSV during THIS search.
+        console.log(`DATA: DIAGNOSTIC - In search, for nameQuery "${nameQuery}", a matching medicine "${specificMed.name}" (ID: ${specificMed.id}) has QTY: ${specificMed.quantity} (as loaded fresh from CSV for this search).`);
     } else {
-        console.log(`DATA: In search, for query "${nameQuery}", no direct match found in CSV to log specific QTY.`);
+        console.log(`DATA: DIAGNOSTIC - In search, for nameQuery "${nameQuery}", no direct match found in CSV to log specific QTY for this search.`);
     }
   }
 
@@ -276,7 +267,6 @@ export async function searchMedicinesByNameAndPotency(nameQuery?: string, potenc
 }
 
 export async function getUniqueMedicineNames(): Promise<string[]> {
-  // It's better for unique names to also come from the persisted CSV for consistency with search
   const currentMedicinesFromCSV = loadMedicinesFromCSV();
   const uniqueNames = new Set<string>();
   currentMedicinesFromCSV.forEach(med => uniqueNames.add(med.name));
@@ -284,4 +274,3 @@ export async function getUniqueMedicineNames(): Promise<string[]> {
   console.log(`DATA: Found ${sortedNames.length} unique medicine names for autocomplete (from CSV).`);
   return sortedNames;
 }
-
