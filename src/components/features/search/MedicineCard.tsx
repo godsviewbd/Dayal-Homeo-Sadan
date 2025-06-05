@@ -12,15 +12,15 @@ interface MedicineCardProps {
 
 export function MedicineCard({ medicine }: MedicineCardProps) {
   return (
-    <div className="card-base relative flex flex-col justify-between cursor-pointer overflow-hidden transition-all duration-200 ease-out hover:scale-[1.01] hover:shadow-xl dark:bg-gray-800 h-full">
+    <div className="card-base flex h-full flex-col justify-between overflow-hidden p-6 transition-all duration-200 ease-out hover:scale-[1.01] hover:shadow-xl dark:bg-gray-800">
       {/* Top section: Name and Badge managed by Flexbox */}
       <div>
-        {/* Container for Name and Badge - Relative positioning context for the badge */}
-        <div className="relative mb-3">
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 pr-[140px]"> {/* Generous padding on the right */}
+        {/* Container for Name and Badge - Using Flexbox */}
+        <div className="mb-3 flex items-start justify-between">
+          <h3 className="min-w-0 flex-grow mr-3 text-xl font-semibold text-gray-900 dark:text-gray-100">
             {medicine.name}
           </h3>
-          <div className="absolute top-0 right-0 mt-1"> {/* Badge positioned absolutely */}
+          <div className="mt-1 flex-shrink-0"> {/* mt-1 for slight vertical alignment if title wraps */}
             <QuantityBadge quantity={medicine.quantity} />
           </div>
         </div>
@@ -28,28 +28,28 @@ export function MedicineCard({ medicine }: MedicineCardProps) {
         {/* Details Section */}
         <div className="space-y-2 text-sm">
           <div className="flex items-center">
-            <Layers className="mr-2 h-4 w-4 text-primary-500 dark:text-primary-300 flex-shrink-0" />
-            <span className="font-medium text-gray-600 dark:text-gray-400 mr-1.5 min-w-[60px]">Potency:</span>
-            <span className="font-semibold text-gray-800 dark:text-gray-200 truncate" title={medicine.potency}>{medicine.potency}</span>
+            <Layers className="mr-2 h-4 w-4 flex-shrink-0 text-primary-500 dark:text-primary-300" />
+            <span className="mr-1.5 min-w-[60px] font-medium text-gray-600 dark:text-gray-400">Potency:</span>
+            <span className="truncate font-semibold text-gray-800 dark:text-gray-200" title={medicine.potency}>{medicine.potency}</span>
           </div>
 
           <div className="flex items-center">
-            <Pill className="mr-2 h-4 w-4 text-primary-500 dark:text-primary-300 flex-shrink-0" />
-            <span className="font-medium text-gray-600 dark:text-gray-400 mr-1.5 min-w-[60px]">Form:</span>
-            <span className="font-semibold text-gray-800 dark:text-gray-200 truncate" title={medicine.preparation}>{medicine.preparation}</span>
+            <Pill className="mr-2 h-4 w-4 flex-shrink-0 text-primary-500 dark:text-primary-300" />
+            <span className="mr-1.5 min-w-[60px] font-medium text-gray-600 dark:text-gray-400">Form:</span>
+            <span className="truncate font-semibold text-gray-800 dark:text-gray-200" title={medicine.preparation}>{medicine.preparation}</span>
           </div>
           
           <div className="flex items-center">
-            <MapPin className="mr-2 h-4 w-4 text-primary-500 dark:text-primary-300 flex-shrink-0" />
-            <span className="font-medium text-gray-600 dark:text-gray-400 mr-1.5 min-w-[60px]">Box:</span>
-            <span className="font-semibold text-gray-800 dark:text-gray-200 truncate" title={medicine.location || "N/A"}>{medicine.location || "N/A"}</span>
+            <MapPin className="mr-2 h-4 w-4 flex-shrink-0 text-primary-500 dark:text-primary-300" />
+            <span className="mr-1.5 min-w-[60px] font-medium text-gray-600 dark:text-gray-400">Box:</span>
+            <span className="truncate font-semibold text-gray-800 dark:text-gray-200" title={medicine.location || "N/A"}>{medicine.location || "N/A"}</span>
           </div>
 
           {medicine.supplier && (
             <div className="flex items-center">
-              <Info className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
-              <span className="font-medium text-gray-600 dark:text-gray-400 mr-1.5 min-w-[60px]">Supplier:</span>
-              <span className="font-semibold text-gray-800 dark:text-gray-200 truncate" title={medicine.supplier}>{medicine.supplier}</span>
+              <Info className="mr-2 h-4 w-4 flex-shrink-0 text-gray-500 dark:text-gray-400" />
+              <span className="mr-1.5 min-w-[60px] font-medium text-gray-600 dark:text-gray-400">Supplier:</span>
+              <span className="truncate font-semibold text-gray-800 dark:text-gray-200" title={medicine.supplier}>{medicine.supplier}</span>
             </div>
           )}
         </div>
