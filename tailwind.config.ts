@@ -133,10 +133,10 @@ export default {
           50: 'hsl(174, 60%, 95%)', // #E5F2F0 (Splash gradient start light)
           100: 'hsl(174, 50%, 90%)',
           200: 'hsl(174, 40%, 80%)',
-          300: 'hsl(174, 30%, 70%)', // #8FBCB7 (Splash dot dark)
-          400: 'hsl(174, 28%, 60%)', // Dark Mode Primary Button (Splash dot dark, text dark)
-          500: 'hsl(174, 25%, 55%)', // #6FA8A3 (Primary Teal 500 - Splash dot light, text light)
-          600: 'hsl(174, 30%, 45%)',
+          300: 'hsl(174, 30%, 70%)', // #8FBCB7 (Primary Teal 300)
+          400: 'hsl(174, 28%, 60%)', // #849FAD (Primary Teal 400)
+          500: 'hsl(174, 25%, 55%)', // #6FA8A3 (Primary Teal 500)
+          600: 'hsl(174, 30%, 45%)', // #50958E (Primary Teal 600)
           700: 'hsl(174, 35%, 35%)',
           800: 'hsl(174, 40%, 25%)',
           900: 'hsl(174, 45%, 15%)',
@@ -207,7 +207,6 @@ export default {
           '0%': { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
         },
-        // For toasts (Section 15.4)
         "toast-slide-in-top": {
           "0%": { transform: "translateY(-100%)", opacity: "0" },
           "100%": { transform: "translateY(0)", opacity: "1" },
@@ -216,18 +215,47 @@ export default {
           "0%": { opacity: "1" },
           "100%": { opacity: "0" },
         },
-        "fadeInUpDelayed": { // For splash screen
+        "fadeInUpDelayed": { // For original splash screen
           '0%': { opacity: '0', transform: 'translateY(10px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        // New keyframes for enhanced splash screen
+        "logoPopIn": {
+          '0%': { opacity: '0', transform: 'scale(0.8) rotateX(-10deg)' },
+          '70%': { opacity: '1', transform: 'scale(1.05) rotateX(5deg)' },
+          '100%': { opacity: '1', transform: 'scale(1) rotateX(0deg)' },
+        },
+        "textEmerge": {
+          '0%': { opacity: '0', transform: 'translateY(8px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        "frostedReveal": { // Simple fade-in for the panel with blur
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        "indeterminateProgress": {
+          '0%': { transform: 'translateX(-100%) scaleX(0.3)' },
+          '50%': { transform: 'translateX(0%) scaleX(0.15)' },
+          '100%': { transform: 'translateX(100%) scaleX(0.3)' },
+        },
+        "fadeInSlow": { // General slow fade-in
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
         }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        shimmer: 'shimmer 1.5s infinite linear', // From spec (Section 13.2)
+        shimmer: 'shimmer 1.5s infinite linear',
         "toast-slide-in-top": "toast-slide-in-top 0.3s ease-out forwards",
         "toast-fade-out": "toast-fade-out 0.3s ease-in forwards",
-        "fadeInUpDelayed": "fadeInUpDelayed 0.6s cubic-bezier(0,0,0.2,1) 0.2s forwards", // ease-out, 0.2s delay
+        "fadeInUpDelayed": "fadeInUpDelayed 0.6s cubic-bezier(0,0,0.2,1) 0.2s forwards",
+        // New animations for enhanced splash
+        "logoPopIn": 'logoPopIn 0.6s cubic-bezier(0.2, 1, 0.3, 1) 0.3s forwards',
+        "textEmerge": 'textEmerge 0.5s cubic-bezier(0.2, 1, 0.3, 1) forwards',
+        "frostedReveal": 'frostedReveal 0.5s ease-out 0.2s forwards',
+        "indeterminateProgress": 'indeterminateProgress 1.8s ease-in-out infinite',
+        "fadeInSlow": 'fadeInSlow 0.5s ease-out forwards',
       },
     },
   },

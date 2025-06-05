@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, useEffect, type ReactNode, useRef } from 'react';
 import { SimpleSplashScreen } from '@/components/layout/SplashScreen';
 import { cn } from '@/lib/utils';
 
@@ -11,28 +11,45 @@ interface AppInitializerProps {
 
 export function AppInitializer({ children }: AppInitializerProps) {
   const [isAppReady, setIsAppReady] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null); // Ref to hold the timer
+
+  const handleSkipSplash = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current); // Clear the existing timer
+    }
+    setIsAppReady(true); // Immediately set app as ready
+  };
 
   useEffect(() => {
     // Ensure this runs only on the client
     if (typeof window !== 'undefined') {
-      const timer = setTimeout(() => {
+      // Clear any existing timer before setting a new one (e.g., on hot reload)
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+      timerRef.current = setTimeout(() => {
         setIsAppReady(true);
       }, 2500); // Splash screen visible for 2.5 seconds
 
-      return () => clearTimeout(timer);
+      // Cleanup function to clear the timer if the component unmounts
+      return () => {
+        if (timerRef.current) {
+          clearTimeout(timerRef.current);
+        }
+      };
     }
   }, []);
 
   return (
     <>
-      {!isAppReady && <SimpleSplashScreen />}
+      {!isAppReady && <SimpleSplashScreen onSkip={handleSkipSplash} />}
       
-      {/* Content will fade in */}
       <div className={cn(
-        'transition-opacity duration-500 ease-in-out', // Matches spec: fade out splash, app fades in
-        isAppReady ? 'opacity-100' : 'opacity-0'
+        'transition-opacity duration-500 ease-in-out',
+        isAppReady ? 'opacity-100' : 'opacity-0 pointer-events-none' // Added pointer-events-none when hidden
       )}>
-        {isAppReady ? children : null /* Render children only when ready to avoid premature rendering issues */}
+        {/* Render children only when ready to avoid premature rendering issues and allow content to be present for fade-in */}
+        {children}
       </div>
     </>
   );
