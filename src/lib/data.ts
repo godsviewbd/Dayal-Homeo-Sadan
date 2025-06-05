@@ -14,7 +14,7 @@ function loadMedicinesFromCSV(): Medicine[] {
   if (!fs.existsSync(CSV_FILE_PATH)) {
     console.error(`!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`);
     console.error(`DATA: ERROR - CSV file not found at ${CSV_FILE_PATH}.`);
-    console.error(`Please create this file with the following header (ensure no leading/trailing spaces per field):`);
+    console.error(`Please create this file with the header (ensure no leading/trailing spaces per field):`);
     console.error(`Medicine Name,Potecy/Power,Box Number,Total Number Of Medicine`);
     console.error(`The application will proceed with an empty inventory.`);
     console.error(`!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`);
@@ -26,8 +26,8 @@ function loadMedicinesFromCSV(): Medicine[] {
     const parsed = Papa.parse<Record<string, string>>(csvFileContent, {
       header: true,
       skipEmptyLines: true,
-      dynamicTyping: false, 
-      transformHeader: header => header.trim(), 
+      dynamicTyping: false,
+      transformHeader: header => header.trim(),
     });
 
     if (parsed.errors.length > 0) {
@@ -35,7 +35,6 @@ function loadMedicinesFromCSV(): Medicine[] {
       console.warn(`DATA: There were errors parsing ${CSV_FILE_PATH}. Inventory might be incomplete. Please check the file format and content.`);
     }
     
-    // Expected header based on user's CSV sample
     const expectedHeaders = ['Medicine Name', 'Potecy/Power', 'Box Number', 'Total Number Of Medicine'];
     const actualHeaders = parsed.meta.fields;
     console.log("DATA: Actual CSV Headers found:", actualHeaders);
@@ -46,7 +45,7 @@ function loadMedicinesFromCSV(): Medicine[] {
     }
     
     const fileContentLines = fs.readFileSync(CSV_FILE_PATH, 'utf-8').trim().split('\n');
-    if (parsed.data.length === 0 && fileContentLines.length <= 1 && fileContentLines[0].trim() === expectedHeaders.join(',')) {
+    if (parsed.data.length === 0 && fileContentLines.length <= 1 && fileContentLines[0].trim().toLowerCase() === expectedHeaders.join(',').toLowerCase()) {
       console.info(`DATA: The CSV file at ${CSV_FILE_PATH} contains only the header row. Inventory will be empty. Populate the CSV with your medicine data.`);
       return [];
     }
@@ -91,22 +90,15 @@ function loadMedicinesFromCSV(): Medicine[] {
         const rawPotencyLower = rawPotencyFromCSV.toLowerCase();
         for (const canonicalP of POTENCIES) { 
           const canonicalPLower = canonicalP.toLowerCase();
-          // Test if the raw potency string *contains* the canonical potency, 
-          // and also check for common suffixes like c, x, ch, m or terms like power/strength.
-          // Example: "200", "200c", "power 200", "200 C", "strength 200" should map to "200"
           const pattern = new RegExp(`\\b${canonicalPLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:c|x|ch|m|\\s*(?:potency|strength|power))?\\b`, 'i');
           const simpleInclusionPattern = new RegExp(`\\b${canonicalPLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
 
-
           if (pattern.test(rawPotencyLower) || simpleInclusionPattern.test(rawPotencyLower)) {
-            // Prefer exact matches or matches with suffixes if POTENCIES includes them e.g. "30C"
-            // If POTENCIES is just "30", then "30C" will map to "30".
             let bestMatch = canonicalP;
-            // If POTENCIES contains more specific forms (like "30C"), prefer that if it matches.
             for (const specificP of POTENCIES) {
                 if (rawPotencyLower.includes(specificP.toLowerCase())) {
-                    bestMatch = specificP; // A more specific match from POTENCIES
-                    if (specificP.toLowerCase() === rawPotencyLower) break; // Exact match is best
+                    bestMatch = specificP; 
+                    if (specificP.toLowerCase() === rawPotencyLower) break; 
                 }
             }
             extractedPotency = bestMatch;
@@ -117,7 +109,6 @@ function loadMedicinesFromCSV(): Medicine[] {
       }
 
       if (!extractedPotency) {
-        // Fallback: if still no match, take the first part of rawPotencyFromCSV if it's in POTENCIES
         const firstWord = rawPotencyFromCSV.split(" ")[0];
         if (POTENCIES.map(p => p.toLowerCase()).includes(firstWord.toLowerCase())) {
             extractedPotency = POTENCIES.find(p => p.toLowerCase() === firstWord.toLowerCase());
@@ -139,7 +130,7 @@ function loadMedicinesFromCSV(): Medicine[] {
         id: generatedId,
         name: medicineName, 
         potency: extractedPotency, 
-        preparation: 'Pellets' as Preparation, 
+        preparation: 'Liquid' as Preparation, // Changed default to 'Liquid'
         batchNumber: boxNumber, 
         expirationDate: 'N/A', 
         location: `Box ${boxNumber}`, 
@@ -261,4 +252,3 @@ export async function getUniqueMedicineNames(): Promise<string[]> {
   console.log(`DATA: Found ${sortedNames.length} unique medicine names for autocomplete.`);
   return sortedNames;
 }
-

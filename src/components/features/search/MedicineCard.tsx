@@ -1,3 +1,4 @@
+
 import type { Medicine } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -30,14 +31,7 @@ export function MedicineCard({ medicine }: MedicineCardProps) {
           <MapPin className="h-4 w-4 mr-2 text-primary" />
           <span>Location: {medicine.location}</span>
         </div>
-        <div className="flex items-center">
-          <Package className="h-4 w-4 mr-2 text-primary" />
-          <span>Batch: {medicine.batchNumber}</span>
-        </div>
-        <div className="flex items-center">
-          <CalendarDays className="h-4 w-4 mr-2 text-primary" />
-          <span>Expires: {new Date(medicine.expirationDate).toLocaleDateString()}</span>
-        </div>
+        {/* Batch Number and Expiration Date removed as per request */}
         {medicine.supplier && (
           <div className="flex items-center">
             <Info className="h-4 w-4 mr-2 text-primary" />
