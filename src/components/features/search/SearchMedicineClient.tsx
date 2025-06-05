@@ -17,8 +17,8 @@ import { MedicineCard } from "./MedicineCard";
 import { MedicineCardSkeleton } from "./MedicineCardSkeleton";
 import type { Medicine } from "@/types";
 import { POTENCIES } from "@/types";
-import { handleParseHomeopathicQuery, fetchMedicinesForSearch, handleGetUniqueMedicineNames, fetchMedicineIndicationsFromCSVAction } from "@/lib/actions"; // Added fetchMedicineIndicationsFromCSVAction
-import { Loader2, SearchIcon, AlertCircle, Wand2, Info, ChevronDown, HelpCircle } from "lucide-react"; 
+import { handleParseHomeopathicQuery, fetchMedicinesForSearch, handleGetUniqueMedicineNames, fetchMedicineIndicationsFromCSVAction } from "@/lib/actions"; 
+import { Loader2, SearchIcon, AlertCircle, Info, ChevronDown, HelpCircle } from "lucide-react"; 
 import type { ParseHomeopathicQueryOutput } from "@/ai/flows/parse-homeopathic-query";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -36,8 +36,8 @@ export function SearchMedicineClient() {
   const [error, setError] = useState<string | null>(null);
   const [aiParsedInfo, setAiParsedInfo] = useState<ParseHomeopathicQueryOutput | null>(null);
   const [searchAttempted, setSearchAttempted] = useState(false);
-  const [currentMedicineIndications, setCurrentMedicineIndications] = useState<string | null>(null); // New state for indications
-  const [primarySearchedMedicineName, setPrimarySearchedMedicineName] = useState<string | null>(null); // New state for primary searched name
+  const [currentMedicineIndications, setCurrentMedicineIndications] = useState<string | null>(null); 
+  const [primarySearchedMedicineName, setPrimarySearchedMedicineName] = useState<string | null>(null); 
 
   const [allMedicineBaseNames, setAllMedicineBaseNames] = useState<string[]>([]);
   const [nameSuggestions, setNameSuggestions] = useState<string[]>([]);
@@ -97,12 +97,12 @@ export function SearchMedicineClient() {
   const onSubmit = async (data: SearchFormData) => {
     setIsLoading(true);
     setError(null);
-    setAiParsedInfo(null);
+    // setAiParsedInfo(null); // Keep AI parsed info if you want to use it, but we removed its display
     setShowNameSuggestions(false);
     setSearchAttempted(true);
     setSearchResults([]);
-    setCurrentMedicineIndications(null); // Reset indications
-    setPrimarySearchedMedicineName(null); // Reset primary name
+    setCurrentMedicineIndications(null); 
+    setPrimarySearchedMedicineName(null); 
 
     let searchName = data.query.trim();
     let searchPotency = data.potency;
@@ -113,7 +113,7 @@ export function SearchMedicineClient() {
       return;
     }
     
-    let nameForIndicationsLookup = searchName; // Default to user's query
+    let nameForIndicationsLookup = searchName; 
 
     if (searchName !== "") {
         try {
@@ -121,10 +121,10 @@ export function SearchMedicineClient() {
             if ('error' in aiResult) {
                 console.warn("SearchClient: AI parsing failed, proceeding with form data. Error:", aiResult.error);
             } else {
-                setAiParsedInfo(aiResult);
+                // setAiParsedInfo(aiResult); // Still set it if needed for other logic
                 if (aiResult.medicineName && aiResult.medicineName.trim().toLowerCase() !== "any potency") {
                   searchName = aiResult.medicineName.trim();
-                  nameForIndicationsLookup = aiResult.medicineName.trim(); // Use AI parsed name for indications
+                  nameForIndicationsLookup = aiResult.medicineName.trim(); 
                 }
                 if (aiResult.potency && aiResult.potency.toLowerCase() !== "any potency" && data.potency === "Any") {
                    let clientMatchedPotency: string | undefined = undefined;
@@ -154,14 +154,22 @@ export function SearchMedicineClient() {
       setSearchResults(medicines);
 
       if (medicines.length > 0) {
-        // If AI didn't provide a clean name, use the name from the first result for indications
         if (!nameForIndicationsLookup || nameForIndicationsLookup.toLowerCase() === "any potency") {
             nameForIndicationsLookup = medicines[0].name;
+            console.log(`INDICATIONS_CLIENT: Using name from first search result for indications lookup: "${nameForIndicationsLookup}"`);
+        } else {
+            console.log(`INDICATIONS_CLIENT: Using (AI or user query) name for indications lookup: "${nameForIndicationsLookup}"`);
         }
-        setPrimarySearchedMedicineName(nameForIndicationsLookup); // Store the name used for lookup
+        setPrimarySearchedMedicineName(nameForIndicationsLookup);
 
-        const indications = await fetchMedicineIndicationsFromCSVAction(nameForIndicationsLookup);
-        setCurrentMedicineIndications(indications || null);
+        console.log(`INDICATIONS_CLIENT: About to call fetchMedicineIndicationsFromCSVAction for: "${nameForIndicationsLookup}"`);
+        const indicationsResult = await fetchMedicineIndicationsFromCSVAction(nameForIndicationsLookup);
+        console.log(`INDICATIONS_CLIENT: Result from fetchMedicineIndicationsFromCSVAction for "${nameForIndicationsLookup}":`, indicationsResult ? `"${indicationsResult.substring(0,50)}..."` : "null/undefined");
+        setCurrentMedicineIndications(indicationsResult || null);
+
+      } else {
+        console.log("INDICATIONS_CLIENT: No search results, skipping indications fetch.");
+        setCurrentMedicineIndications(null); 
       }
 
     } catch (e) {
@@ -217,9 +225,6 @@ export function SearchMedicineClient() {
       );
     }
 
-    // This part will render after the cards if there are results and indications
-    // The actual rendering of indications will be done outside this function, after the grid.
-    // This function just handles the medicine cards grid.
 
     if (searchResults.length > 0) {
       return (
@@ -357,7 +362,7 @@ export function SearchMedicineClient() {
             {renderResults()}
         </div>
 
-        {/* Section to display medicine indications */}
+        
         {currentMedicineIndications && searchResults.length > 0 && primarySearchedMedicineName && (
           <div className="mt-8 rounded-lg bg-gray-50 p-6 dark:bg-gray-800/50 shadow-md border-l-4 border-teal-500">
             <div className="flex items-center mb-3">

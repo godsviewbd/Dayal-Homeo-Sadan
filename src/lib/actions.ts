@@ -12,17 +12,16 @@ import {
   searchMedicinesByNameAndPotency as dbSearchMedicines,
   getMedicineById as dbGetMedicineById,
   getUniqueMedicineNames as dbGetUniqueMedicineNames,
-  getIndicationsByMedicineName as dbGetIndications, // New import
+  getIndicationsByMedicineName as dbGetIndications, 
 } from '@/lib/data';
 import type { Medicine } from '@/types';
-import { medicineSchema } from '@/types'; // medicineSchema is now simplified
+import { medicineSchema } from '@/types'; 
 import { parseHomeopathicQuery as aiParseQuery } from '@/ai/flows/parse-homeopathic-query';
 import type { ParseHomeopathicQueryInput, ParseHomeopathicQueryOutput } from '@/ai/flows/parse-homeopathic-query';
 
 
 export type MedicineFormState = {
   message: string;
-  // Adjusted errors to reflect removed fields from medicineSchema
   errors?: {
     name?: string[];
     potency?: string[];
@@ -30,7 +29,7 @@ export type MedicineFormState = {
     location?: string[];
     quantity?: string[];
     supplier?: string[];
-    server?: string; // For general server-side errors not tied to a field
+    server?: string; 
   };
   success: boolean;
 } | null;
@@ -41,7 +40,6 @@ export async function addMedicineAction(
   formData: FormData
 ): Promise<MedicineFormState> {
   const rawFormData = Object.fromEntries(formData.entries());
-  // medicineSchema is now simplified (no batchNumber, expirationDate, alternateNames)
   const validatedFields = await medicineSchema.safeParseAsync(rawFormData);
 
   if (!validatedFields.success) {
@@ -53,19 +51,18 @@ export async function addMedicineAction(
   }
 
   try {
-    // Construct medicineToAdd based on the new simplified Medicine type
     const medicineToAdd: Omit<Medicine, 'id'> = {
       name: validatedFields.data.name,
       potency: validatedFields.data.potency,
       preparation: validatedFields.data.preparation,
-      location: validatedFields.data.location, // This is Box Number
+      location: validatedFields.data.location, 
       quantity: validatedFields.data.quantity,
       supplier: validatedFields.data.supplier,
     };
     await dbAddMedicine(medicineToAdd);
     console.log(`ACTIONS: addMedicineAction successful for '${medicineToAdd.name}'. Revalidating paths...`);
     revalidatePath('/inventory');
-    revalidatePath('/'); // Revalidate homepage/search as well
+    revalidatePath('/'); 
      return { message: `Medicine "${medicineToAdd.name}" added successfully!`, success: true };
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : "An unknown error occurred";
@@ -80,7 +77,6 @@ export async function updateMedicineAction(
   formData: FormData
 ): Promise<MedicineFormState> {
   const rawFormData = Object.fromEntries(formData.entries());
-  // medicineSchema is now simplified
   const validatedFields = await medicineSchema.safeParseAsync(rawFormData);
 
   if (!validatedFields.success) {
@@ -92,12 +88,11 @@ export async function updateMedicineAction(
   }
 
   try {
-    // Construct medicineToUpdate based on the new simplified Medicine type
     const medicineToUpdate: Partial<Omit<Medicine, 'id'>> = {
       name: validatedFields.data.name,
       potency: validatedFields.data.potency,
       preparation: validatedFields.data.preparation,
-      location: validatedFields.data.location, // This is Box Number
+      location: validatedFields.data.location, 
       quantity: validatedFields.data.quantity,
       supplier: validatedFields.data.supplier,
     };
@@ -108,7 +103,7 @@ export async function updateMedicineAction(
     console.log(`ACTIONS: updateMedicineAction successful for ID ${id} ('${updated.name}'). Revalidating paths...`);
     revalidatePath('/inventory');
     revalidatePath(`/inventory/${id}/edit`);
-    revalidatePath('/'); // Revalidate homepage/search as well
+    revalidatePath('/'); 
     return { message: `Medicine "${updated.name}" updated successfully!`, success: true };
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : "An unknown error occurred";
@@ -122,13 +117,10 @@ export async function deleteMedicineAction(id: string) {
     await dbDeleteMedicine(id);
     console.log(`ACTIONS: deleteMedicineAction successful for ID ${id}. Revalidating paths...`);
     revalidatePath('/inventory');
-    revalidatePath('/'); // Revalidate homepage/search as well
+    revalidatePath('/'); 
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : "An unknown error occurred";
     console.error(`ACTIONS: Failed to delete medicine ID ${id}:`, errorMessage);
-    // In a real app, you might want to return a state or throw to be caught by the client
-    // For now, this action doesn't return a state for toast notifications directly.
-    // The DeleteMedicineButton handles its own optimistic updates and toasts.
     throw new Error(`Failed to delete medicine: ${errorMessage}`);
   }
 }
@@ -155,14 +147,18 @@ export async function handleGetUniqueMedicineNames(): Promise<string[]> {
   return dbGetUniqueMedicineNames();
 }
 
-// New action to fetch indications from CSV
 export async function fetchMedicineIndicationsFromCSVAction(medicineName: string): Promise<string | undefined> {
+  console.log(`ACTIONS_INDICATIONS: fetchMedicineIndicationsFromCSVAction called for: "${medicineName}"`);
   try {
     const indications = await dbGetIndications(medicineName);
+    if (indications) {
+      console.log(`ACTIONS_INDICATIONS: Indications retrieved for "${medicineName}". Length: ${indications.length}`);
+    } else {
+      console.log(`ACTIONS_INDICATIONS: No indications retrieved for "${medicineName}" from data layer.`);
+    }
     return indications;
   } catch (error) {
-    console.error(`ACTIONS: Error fetching indications for "${medicineName}" from CSV:`, error);
-    // Depending on desired behavior, could return undefined or throw an error
+    console.error(`ACTIONS_INDICATIONS: Error fetching indications for "${medicineName}" from CSV:`, error);
     return undefined; 
   }
 }

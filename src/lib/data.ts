@@ -184,11 +184,11 @@ function loadMedicinesFromCSV(): Medicine[] {
 let medicinesStore: Medicine[] = loadMedicinesFromCSV(); // Renamed for clarity
 
 function loadIndicationsFromCSV(): void {
-  if (indicationsLoaded) return; // Avoid reloading if already loaded
+  if (indicationsLoaded) return; 
 
-  console.log(`DATA: Attempting to load medicine indications from CSV: ${INDICATIONS_CSV_FILE_PATH}`);
+  console.log(`DATA_INDICATIONS: Attempting to load medicine indications from CSV: ${INDICATIONS_CSV_FILE_PATH}`);
   if (!fs.existsSync(INDICATIONS_CSV_FILE_PATH)) {
-    console.warn(`DATA: Indications CSV file not found at ${INDICATIONS_CSV_FILE_PATH}. Indications feature will be unavailable. Please create this file with headers: ${INDICATIONS_CSV_HEADERS.join(',')}`);
+    console.warn(`DATA_INDICATIONS: Indications CSV file not found at ${INDICATIONS_CSV_FILE_PATH}. Indications feature will be unavailable. Please create this file with headers: ${INDICATIONS_CSV_HEADERS.join(',')}`);
     medicineIndications = [];
     indicationsLoaded = true;
     return;
@@ -205,7 +205,7 @@ function loadIndicationsFromCSV(): void {
 
     const actualHeaders = parsed.meta.fields;
      if (!actualHeaders || actualHeaders.length === 0) {
-      console.warn(`DATA: Indications CSV file at ${INDICATIONS_CSV_FILE_PATH} is empty or has no headers. Indications feature will be unavailable.`);
+      console.warn(`DATA_INDICATIONS: Indications CSV file at ${INDICATIONS_CSV_FILE_PATH} is empty or has no headers. Indications feature will be unavailable.`);
       medicineIndications = [];
       indicationsLoaded = true;
       return;
@@ -213,7 +213,7 @@ function loadIndicationsFromCSV(): void {
     
     const missingHeaders = INDICATIONS_CSV_HEADERS.filter(expectedHeader => !actualHeaders.includes(expectedHeader));
     if (missingHeaders.length > 0) {
-      console.error(`Error: DATA: Indications CSV file at ${INDICATIONS_CSV_FILE_PATH} is missing required headers.`);
+      console.error(`Error: DATA_INDICATIONS: Indications CSV file at ${INDICATIONS_CSV_FILE_PATH} is missing required headers.`);
       console.error(`Required: [${INDICATIONS_CSV_HEADERS.join(', ')}]. Found: [${actualHeaders.join(', ')}]. Missing: [${missingHeaders.join(', ')}].`);
       console.error(`Indications feature will be unavailable.`);
       medicineIndications = [];
@@ -226,34 +226,56 @@ function loadIndicationsFromCSV(): void {
       const indications = row[INDICATIONS_CSV_HEADERS[1]]?.trim();
 
       if (!name || !indications) {
-        console.warn(`DATA: SKIPPING row ${index + 2} in medicine_indications.csv due to missing name or indications. Row: ${JSON.stringify(row)}`);
+        console.warn(`DATA_INDICATIONS: SKIPPING row ${index + 2} in medicine_indications.csv due to missing name or indications. Row: ${JSON.stringify(row)}`);
         return null;
       }
       return { name, indications };
     }).filter(Boolean) as MedicineIndication[];
 
-    console.log(`DATA: Successfully loaded ${medicineIndications.length} medicine indications from ${INDICATIONS_CSV_FILE_PATH}.`);
+    console.log(`DATA_INDICATIONS: Successfully loaded ${medicineIndications.length} medicine indications from ${INDICATIONS_CSV_FILE_PATH}.`);
     indicationsLoaded = true;
   } catch (error) {
-    console.error('DATA: CRITICAL failure while loading medicine indications from CSV:', error instanceof Error ? error.message : String(error));
-    medicineIndications = []; // Ensure it's empty on error
-    indicationsLoaded = true; // Mark as loaded to prevent retries within the same session if file is bad
+    console.error('DATA_INDICATIONS: CRITICAL failure while loading medicine indications from CSV:', error instanceof Error ? error.message : String(error));
+    medicineIndications = []; 
+    indicationsLoaded = true; 
   }
 }
 
-// Load indications once on server start or first access
+
 if (!indicationsLoaded) {
   loadIndicationsFromCSV();
 }
 
 export async function getIndicationsByMedicineName(medicineName: string): Promise<string | undefined> {
-  if (!indicationsLoaded) { // Ensure indications are loaded if not already
+  if (!indicationsLoaded) { 
+    console.log("DATA_INDICATIONS: Indications not loaded on demand call, attempting to load now.");
     loadIndicationsFromCSV();
   }
+
+  console.log(`DATA_INDICATIONS: getIndicationsByMedicineName called for: "${medicineName}"`);
+  console.log(`DATA_INDICATIONS: Total indications currently loaded: ${medicineIndications.length}`);
+  if (medicineIndications.length > 0) {
+    console.log(`DATA_INDICATIONS: First 3 loaded indication names for check: ${medicineIndications.slice(0, 3).map(i => i.name).join('; ')}`);
+  }
+
   const foundIndication = medicineIndications.find(
     (ind) => ind.name.toLowerCase() === medicineName.toLowerCase()
   );
-  return foundIndication?.indications;
+
+  if (foundIndication) {
+    console.log(`DATA_INDICATIONS: Found indications for "${medicineName}": "${foundIndication.indications.substring(0, 50)}..."`);
+    return foundIndication.indications;
+  } else {
+    console.log(`DATA_INDICATIONS: No indications found for "${medicineName}" in the loaded list.`);
+    const similarNames = medicineIndications
+      .filter(ind => ind.name.toLowerCase().includes(medicineName.substring(0, Math.max(3, Math.floor(medicineName.length / 2))).toLowerCase()))
+      .map(ind => ind.name)
+      .slice(0, 5);
+    if (similarNames.length > 0) {
+      console.log(`DATA_INDICATIONS: Potential similar names in CSV based on first half of query: ${similarNames.join('; ')}`);
+    }
+    return undefined;
+  }
 }
 
 
