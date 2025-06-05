@@ -13,6 +13,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<string | null>(null);
 
   useEffect(() => {
+    // Moved theme initialization to a separate effect to avoid re-running on every theme change
+    // This effect runs once on mount to set the initial theme
     const storedTheme = localStorage.getItem('theme');
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     
@@ -20,7 +22,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       setTheme(storedTheme);
       document.documentElement.classList.toggle('dark', storedTheme === 'dark');
     } else {
-      // Default to system preference, then light if no system preference detected
       const initialTheme = systemPrefersDark ? 'dark' : 'light';
       setTheme(initialTheme);
       document.documentElement.classList.toggle('dark', initialTheme === 'dark');
@@ -44,6 +45,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   ];
 
   if (theme === null) {
+    // Basic loading state to prevent flash of unstyled content if theme is not yet determined
     return <div className="flex min-h-screen flex-col bg-background text-foreground items-center justify-center">Loading theme...</div>;
   }
 
@@ -110,7 +112,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <ThemeToggleButton className="mr-2 h-10 w-10" />
           <Button
             asChild
-            className="btn-primary h-11 min-h-[44px] !rounded-full px-4 py-2 text-base"
+            variant="default" // Explicitly use default variant for primary styling
+            className="h-11 min-h-[44px] px-4 py-2" // Specific sizing. Shadow, rounding, text color comes from variant.
           >
             <Link href="/inventory/add">
               <PlusCircle className="mr-2 h-5 w-5" />
@@ -140,7 +143,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </a>
         </Link>
         
-        <div className="relative w-14 flex-shrink-0"> {/* Container for FAB, to take up space */}
+        <div className="relative w-14 flex-shrink-0"> {/* Container for FAB */}
           <Link href="/inventory/add" passHref legacyBehavior>
             <a 
               aria-label="Add Medicine"
