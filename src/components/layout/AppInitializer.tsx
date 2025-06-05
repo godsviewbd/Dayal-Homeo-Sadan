@@ -17,7 +17,7 @@ export function AppInitializer({ children }: AppInitializerProps) {
     if (typeof window !== 'undefined') {
       const timer = setTimeout(() => {
         setIsAppReady(true);
-      }, 2000); // Splash screen visible for 2 seconds
+      }, 2500); // Splash screen visible for 2.5 seconds
 
       return () => clearTimeout(timer);
     }
@@ -29,7 +29,7 @@ export function AppInitializer({ children }: AppInitializerProps) {
       
       {/* Content will fade in */}
       <div className={cn(
-        'transition-opacity duration-500 ease-in-out',
+        'transition-opacity duration-500 ease-in-out', // Matches spec: fade out splash, app fades in
         isAppReady ? 'opacity-100' : 'opacity-0'
       )}>
         {isAppReady ? children : null /* Render children only when ready to avoid premature rendering issues */}

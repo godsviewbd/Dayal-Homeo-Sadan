@@ -130,12 +130,12 @@ export default {
           900: "hsl(var(--color-gray-900))",// #111827
         },
          teal: { // Direct teal palette from spec for convenience
-          50: 'hsl(174, 60%, 95%)',
+          50: 'hsl(174, 60%, 95%)', // #E5F2F0 (Splash gradient start light)
           100: 'hsl(174, 50%, 90%)',
           200: 'hsl(174, 40%, 80%)',
-          300: 'hsl(174, 30%, 70%)',
-          400: 'hsl(174, 28%, 60%)',
-          500: 'hsl(174, 25%, 55%)',
+          300: 'hsl(174, 30%, 70%)', // #8FBCB7 (Splash dot dark)
+          400: 'hsl(174, 28%, 60%)', // Dark Mode Primary Button (Splash dot dark, text dark)
+          500: 'hsl(174, 25%, 55%)', // #6FA8A3 (Primary Teal 500 - Splash dot light, text light)
           600: 'hsl(174, 30%, 45%)',
           700: 'hsl(174, 35%, 35%)',
           800: 'hsl(174, 40%, 25%)',
@@ -215,6 +215,10 @@ export default {
         "toast-fade-out": {
           "0%": { opacity: "1" },
           "100%": { opacity: "0" },
+        },
+        "fadeInUpDelayed": { // For splash screen
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
         }
       },
       animation: {
@@ -223,6 +227,7 @@ export default {
         shimmer: 'shimmer 1.5s infinite linear', // From spec (Section 13.2)
         "toast-slide-in-top": "toast-slide-in-top 0.3s ease-out forwards",
         "toast-fade-out": "toast-fade-out 0.3s ease-in forwards",
+        "fadeInUpDelayed": "fadeInUpDelayed 0.6s cubic-bezier(0,0,0.2,1) 0.2s forwards", // ease-out, 0.2s delay
       },
     },
   },
