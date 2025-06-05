@@ -40,10 +40,10 @@ export function SearchMedicineClient() {
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
 
-  const { control, handleSubmit, watch, setValue, setFocus } = useForm<SearchFormData>({
+  const { control, handleSubmit, watch, setValue, setFocus, formState: {isSubmitting} } = useForm<SearchFormData>({
     defaultValues: {
       query: "",
-      potency: "Any",
+      potency: "Any", // Ensure "Any" is the default
     },
   });
 
@@ -53,13 +53,13 @@ export function SearchMedicineClient() {
   // Fetch all unique medicine names for autocomplete
   useEffect(() => {
     const fetchNames = async () => {
-      console.log("SearchMedicineClient: Fetching unique medicine names for autocomplete...");
+      console.log("SearchClient: Fetching unique medicine names for autocomplete...");
       try {
         const names = await handleGetUniqueMedicineNames();
         setAllMedicineBaseNames(names);
-        console.log("SearchMedicineClient: Fetched unique names:", names);
+        console.log("SearchClient: Fetched unique names:", names);
       } catch (e) {
-        console.error("SearchMedicineClient: Failed to fetch unique medicine names for autocomplete:", e);
+        console.error("SearchClient: Failed to fetch unique medicine names for autocomplete:", e);
         setError("Failed to load name suggestions.");
       }
     };
@@ -68,13 +68,13 @@ export function SearchMedicineClient() {
 
   // Update suggestions based on current query
   useEffect(() => {
-    if (currentQuery && currentQuery.length > 0) { // Suggest even from 1 char
+    if (currentQuery && currentQuery.length > 0) {
       const filtered = allMedicineBaseNames.filter(name =>
         name.toLowerCase().includes(currentQuery.toLowerCase())
       );
       setNameSuggestions(filtered.slice(0, 10)); // Limit suggestions
       setShowNameSuggestions(filtered.length > 0);
-      console.log("SearchMedicineClient: Generated suggestions for '"+ currentQuery +"':", filtered.slice(0,10));
+      console.log("SearchClient: Generated suggestions for '"+ currentQuery +"':", filtered.slice(0,10));
     } else {
       setNameSuggestions([]);
       setShowNameSuggestions(false);
@@ -100,64 +100,59 @@ export function SearchMedicineClient() {
     const performInitialSearch = async () => {
       setIsLoading(true);
       setError(null);
-      console.log("SearchMedicineClient: Performing initial search for all medicines.");
+      console.log("SearchClient: Performing initial search for all medicines.");
       try {
-        const medicines = await fetchMedicinesForSearch(undefined, undefined); // Fetch all initially
+        // Pass undefined for name and potency to fetch all
+        const medicines = await fetchMedicinesForSearch(undefined, undefined); 
         setSearchResults(medicines);
-        console.log(`SearchMedicineClient: Initial search returned ${medicines.length} medicines.`);
+        console.log(`SearchClient: Initial search returned ${medicines.length} medicines.`);
       } catch (e) {
         setError("Failed to load initial medicine list.");
-        console.error("SearchMedicineClient: Initial search error:", e);
+        console.error("SearchClient: Initial search error:", e);
       } finally {
         setIsLoading(false);
         setInitialLoadDone(true);
       }
     };
-    performInitialSearch();
-  }, []);
+    if (!initialLoadDone) { // Only run once on initial mount
+        performInitialSearch();
+    }
+  }, [initialLoadDone]);
 
 
   const onSubmit = async (data: SearchFormData) => {
-    console.log("SearchMedicineClient: onSubmit called with data:", data);
+    console.log("SearchClient: onSubmit called with data:", data);
     setIsLoading(true);
     setError(null);
     setAiParsedInfo(null);
-    setShowNameSuggestions(false); // Hide suggestions on submit
+    setShowNameSuggestions(false); 
 
-    let searchName = data.query;
+    let searchName = data.query.trim(); // Trim the query
     let searchPotency = data.potency;
 
-    // Only use AI if query is not empty AND potency is "Any" or AI can refine potency
-    if (data.query.trim() !== "") {
-        console.log("SearchMedicineClient: Query is not empty, attempting AI parse for:", data.query);
+    // Only use AI if query is not empty AND potency is "Any" (or AI can refine potency)
+    if (searchName !== "") {
+        console.log("SearchClient: Query is not empty, attempting AI parse for:", searchName);
         try {
-            const aiResult = await handleParseHomeopathicQuery({ query: data.query });
-            console.log("SearchMedicineClient: AI parse result:", aiResult);
+            const aiResult = await handleParseHomeopathicQuery({ query: searchName });
+            console.log("SearchClient: AI parse FULL result object:", aiResult);
             if ('error' in aiResult) {
-                // Non-critical error, proceed with user's input if AI fails
-                console.warn("SearchMedicineClient: AI parsing failed, proceeding with form data. Error:", aiResult.error);
-                // setError(aiResult.error); // Optionally show AI error, or just let search proceed
+                console.warn("SearchClient: AI parsing failed, proceeding with form data. Error:", aiResult.error);
             } else {
                 setAiParsedInfo(aiResult);
                 if (aiResult.medicineName) {
-                    searchName = aiResult.medicineName; // Use AI's detected name
-                    console.log("SearchMedicineClient: Using AI detected name:", searchName);
+                    searchName = aiResult.medicineName.trim(); 
+                    console.log("SearchClient: Using AI detected name:", searchName);
                 }
 
-                // If user selected "Any" potency, try to use AI's detected potency
                 if (aiResult.potency && aiResult.potency.toLowerCase() !== "any potency" && data.potency === "Any") {
                    let clientMatchedPotency: string | undefined = undefined;
                    const aiPotencyRaw = aiResult.potency.toLowerCase();
                    
                    for (const canonicalP of POTENCIES) { 
                        const canonicalPLower = canonicalP.toLowerCase(); 
-                       let pattern: RegExp;
-                       if (/^(\d+)$/.test(canonicalPLower)) { 
-                           pattern = new RegExp(`\\b${canonicalPLower}(c|x)?\\b`, 'i');
-                       } else { 
-                           pattern = new RegExp(`\\b${canonicalPLower}\\b`, 'i');
-                       }
-
+                       // More direct matching for potency from AI
+                       const pattern = new RegExp(`\\b${canonicalPLower.replace(/(\d+)/, '$1(?:c|x)?')}\\b`, 'i');
                        if (pattern.test(aiPotencyRaw)) {
                            clientMatchedPotency = canonicalP; 
                            break;
@@ -165,27 +160,30 @@ export function SearchMedicineClient() {
                    }
                    if (clientMatchedPotency) {
                      searchPotency = clientMatchedPotency;
-                     setValue('potency', clientMatchedPotency); // Update dropdown to reflect AI's choice
-                     console.log("SearchMedicineClient: Using AI detected and client-matched potency:", searchPotency);
+                     setValue('potency', clientMatchedPotency); 
+                     console.log("SearchClient: Using AI detected and client-matched potency:", searchPotency);
                    } else {
-                     console.log("SearchMedicineClient: AI detected potency '"+aiResult.potency+"' but could not match to client POTENCIES. Using form potency:", data.potency);
+                     console.log("SearchClient: AI detected potency '"+aiResult.potency+"' but could not match to client POTENCIES. Using form potency:", data.potency);
                    }
                 }
             }
         } catch (aiError) {
-            console.error("SearchMedicineClient: Critical error during AI parsing:", aiError);
-            // Proceed with user's input if AI critically fails
+            console.error("SearchClient: Critical error during AI parsing:", aiError);
         }
     }
     
-    console.log(`SearchMedicineClient: Executing search with name: "${searchName}", potency: "${searchPotency}"`);
+    // If query is empty after trim, treat as search all for names
+    const finalSearchName = searchName === "" ? undefined : searchName;
+    const finalSearchPotency = searchPotency === "Any" ? undefined : searchPotency;
+
+    console.log(`SearchClient: Executing search with name: "${finalSearchName}", potency: "${finalSearchPotency}"`);
     try {
-      const medicines = await fetchMedicinesForSearch(searchName, searchPotency === "Any" ? undefined : searchPotency);
+      const medicines = await fetchMedicinesForSearch(finalSearchName, finalSearchPotency);
       setSearchResults(medicines);
-      console.log(`SearchMedicineClient: Search returned ${medicines.length} results.`);
+      console.log(`SearchClient: Search returned ${medicines.length} results.`);
     } catch (e) {
       setError("Failed to fetch medicines.");
-      console.error("SearchMedicineClient: fetchMedicinesForSearch error:", e);
+      console.error("SearchClient: fetchMedicinesForSearch error:", e);
     } finally {
       setIsLoading(false);
     }
@@ -194,14 +192,13 @@ export function SearchMedicineClient() {
   const handleBarcodeScan = () => {
     alert("Barcode scanning feature not implemented in this demo. You would integrate a library like QuaggaJS or use a native device API.");
     setValue("query", "Scanned: Arnica Montana 30C"); 
-    // Potentially trigger search or AI parse here
   };
 
   const handleSuggestionClick = (suggestion: string) => {
     setValue("query", suggestion);
     setNameSuggestions([]);
     setShowNameSuggestions(false);
-    console.log("SearchMedicineClient: Suggestion clicked:", suggestion);
+    console.log("SearchClient: Suggestion clicked:", suggestion);
     setFocus('query'); 
   };
 
@@ -282,8 +279,8 @@ export function SearchMedicineClient() {
               />
             </div>
             
-            <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
-              {isLoading ? (
+            <Button type="submit" disabled={isLoading || isSubmitting} className="w-full sm:w-auto">
+              {(isLoading || isSubmitting) ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <SearchIcon className="mr-2 h-4 w-4" />
@@ -326,14 +323,17 @@ export function SearchMedicineClient() {
           </div>
       )}
 
-      {initialLoadDone && !isLoading && searchResults.length === 0 && (currentQuery || currentPotency !== "Any") && (
+      {initialLoadDone && !isLoading && !isSubmitting && searchResults.length === 0 && (currentQuery || currentPotency !== "Any") && (
         <Card className="shadow">
           <CardHeader>
             <CardTitle className="flex items-center"><Info className="mr-2 h-5 w-5 text-primary"/>No Results Found</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">
-              No medicines matched your search criteria. Try adjusting your query or filters, or check if your CSV file is correctly populated and loaded (see server logs).
+              No medicines matched your search criteria. Try adjusting your query or filters.
+              Check your CSV file at <code>src/data/medicine_name.csv</code> for correct data and headers:
+              <code>"Medicine Name","Potency/Power","Box Number","Total Number Of Medicine"</code>.
+              Also, review server console logs for detailed CSV parsing information.
             </p>
           </CardContent>
         </Card>
@@ -354,4 +354,3 @@ export function SearchMedicineClient() {
     </div>
   );
 }
-
