@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -77,14 +78,33 @@ export function SearchMedicineClient() {
         setError(aiResult.error);
       } else {
         setAiParsedInfo(aiResult);
-        // Override search fields if AI provides confident results, otherwise use form input
+        // Override search fields if AI provides confident results
         if (aiResult.medicineName) searchName = aiResult.medicineName;
-        if (aiResult.potency && aiResult.potency !== "any potency" && searchPotency === "Any") {
-           // Try to match AI potency with available options
-           const matchedPotency = POTENCIES.find(p => p.toLowerCase() === aiResult.potency.toLowerCase());
-           if (matchedPotency) {
-             searchPotency = matchedPotency;
-             setValue('potency', matchedPotency); // Update form field
+
+        // Robustly match AI potency with available canonical POTENCIES
+        if (aiResult.potency && aiResult.potency.toLowerCase() !== "any potency" && searchPotency === "Any") {
+           let clientMatchedPotency: string | undefined = undefined;
+           const aiPotencyRaw = aiResult.potency.toLowerCase(); // e.g., "power 200", "200c", "200"
+           for (const canonicalP of POTENCIES) { // POTENCIES are ['200', '30', '1M', etc.]
+               const canonicalPLower = canonicalP.toLowerCase(); // e.g., "200"
+               
+               // Regex to find the canonical potency within the AI's raw potency string.
+               // E.g., if canonicalPLower is "200", pattern will match "200" in "power 200" or "200c".
+               let pattern: RegExp;
+               if (/^\d+$/.test(canonicalPLower)) { // For numeric potencies like "200", "30"
+                   pattern = new RegExp(`\\b${canonicalPLower}(c|x)?\\b`, 'i');
+               } else { // For potencies with letters like "1M", "3X"
+                   pattern = new RegExp(`\\b${canonicalPLower}\\b`, 'i');
+               }
+
+               if (pattern.test(aiPotencyRaw)) {
+                   clientMatchedPotency = canonicalP; // Assign the canonical form, e.g., "200"
+                   break;
+               }
+           }
+           if (clientMatchedPotency) {
+             searchPotency = clientMatchedPotency;
+             setValue('potency', clientMatchedPotency); // Update form field with canonical potency
            }
         }
       }
@@ -236,3 +256,4 @@ export function SearchMedicineClient() {
     </div>
   );
 }
+
