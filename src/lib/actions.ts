@@ -29,7 +29,7 @@ export type MedicineFormState = {
     location?: string[];
     quantity?: string[];
     supplier?: string[];
-    server?: string;
+    server?: string; // For general server-side errors not tied to a field
   };
   success: boolean;
 } | null;
@@ -62,11 +62,14 @@ export async function addMedicineAction(
       supplier: validatedFields.data.supplier,
     };
     await dbAddMedicine(medicineToAdd);
+    console.log(`ACTIONS: addMedicineAction successful for '${medicineToAdd.name}'. Revalidating paths...`);
     revalidatePath('/inventory');
-    revalidatePath('/');
-     return { message: "Medicine added successfully!", success: true };
+    revalidatePath('/'); // Revalidate homepage/search as well
+     return { message: `Medicine "${medicineToAdd.name}" added successfully!`, success: true };
   } catch (e) {
-    return { message: "Failed to add medicine.", success: false, errors: { server: (e as Error).message } };
+    const errorMessage = e instanceof Error ? e.message : "An unknown error occurred";
+    console.error("ACTIONS: Failed to add medicine:", errorMessage);
+    return { message: `Failed to add medicine. ${errorMessage}`, success: false, errors: { server: errorMessage } };
   }
 }
 
@@ -82,11 +85,11 @@ export async function updateMedicineAction(
   if (!validatedFields.success) {
     return {
       message: "Validation failed. Please check the fields.",
-      errors: validatedFields.error.flatten().fieldErrors as any, 
+      errors: validatedFields.error.flatten().fieldErrors as any,
       success: false,
     };
   }
-  
+
   try {
     // Construct medicineToUpdate based on the new simplified Medicine type
     const medicineToUpdate: Partial<Omit<Medicine, 'id'>> = {
@@ -99,26 +102,33 @@ export async function updateMedicineAction(
     };
     const updated = await dbUpdateMedicine(id, medicineToUpdate);
     if (!updated) {
-       return { message: "Medicine not found or failed to update.", success: false };
+       return { message: `Medicine with ID ${id} not found or failed to update.`, success: false, errors: {server: "Update failed: medicine not found or no changes made."} };
     }
+    console.log(`ACTIONS: updateMedicineAction successful for ID ${id} ('${updated.name}'). Revalidating paths...`);
     revalidatePath('/inventory');
     revalidatePath(`/inventory/${id}/edit`);
-    revalidatePath('/');
-    return { message: "Medicine updated successfully!", success: true };
+    revalidatePath('/'); // Revalidate homepage/search as well
+    return { message: `Medicine "${updated.name}" updated successfully!`, success: true };
   } catch (e) {
-    return { message: "Failed to update medicine.", success: false, errors: { server: (e as Error).message } };
+    const errorMessage = e instanceof Error ? e.message : "An unknown error occurred";
+    console.error(`ACTIONS: Failed to update medicine ID ${id}:`, errorMessage);
+    return { message: `Failed to update medicine. ${errorMessage}`, success: false, errors: { server: errorMessage } };
   }
 }
 
 export async function deleteMedicineAction(id: string) {
   try {
     await dbDeleteMedicine(id);
+    console.log(`ACTIONS: deleteMedicineAction successful for ID ${id}. Revalidating paths...`);
     revalidatePath('/inventory');
-    revalidatePath('/');
+    revalidatePath('/'); // Revalidate homepage/search as well
   } catch (e) {
-    console.error("Failed to delete medicine:", e);
-    // Optionally, return an error state to be handled by the UI
-    // throw new Error("Failed to delete medicine.");
+    const errorMessage = e instanceof Error ? e.message : "An unknown error occurred";
+    console.error(`ACTIONS: Failed to delete medicine ID ${id}:`, errorMessage);
+    // In a real app, you might want to return a state or throw to be caught by the client
+    // For now, this action doesn't return a state for toast notifications directly.
+    // The DeleteMedicineButton handles its own optimistic updates and toasts.
+    throw new Error(`Failed to delete medicine: ${errorMessage}`);
   }
 }
 
@@ -127,7 +137,7 @@ export async function handleParseHomeopathicQuery(input: ParseHomeopathicQueryIn
     const result = await aiParseQuery(input);
     return result;
   } catch (error) {
-    console.error("Error parsing query with AI:", error);
+    console.error("ACTIONS: Error parsing query with AI:", error);
     return { error: "Failed to parse query. Please try a simpler query or check the AI service." };
   }
 }
