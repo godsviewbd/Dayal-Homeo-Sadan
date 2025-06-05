@@ -19,7 +19,7 @@ export function MedicineCard({ medicine }: MedicineCardProps) {
           <QuantityBadge quantity={medicine.quantity} />
         </div>
         
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 pr-36 mb-3"> {/* Changed pr-28 to pr-36 */}
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 pr-44 mb-3"> {/* Changed pr-36 to pr-44 */}
           {medicine.name}
         </h3>
 
