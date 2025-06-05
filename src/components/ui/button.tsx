@@ -12,14 +12,14 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: // Primary
-          "bg-primary-500 text-white shadow-md hover:bg-primary-600 dark:bg-primary-400 dark:text-gray-900 dark:hover:bg-primary-500",
+          "bg-primary-500 text-white shadow-md hover:bg-primary-600 dark:bg-primary-300 dark:text-gray-900 dark:hover:bg-primary-400", // Corrected dark mode
         destructive:
           "bg-semantic-error text-semantic-error-fg shadow-md hover:bg-red-600 dark:bg-red-700 dark:hover:bg-red-800",
         outline: // Secondary / Outline
           "border-2 border-primary-500 text-primary-500 hover:bg-primary-50 dark:border-primary-300 dark:text-primary-300 dark:hover:bg-primary-900/20",
         secondary: // A general secondary style if needed, distinct from outline
           "bg-secondary-500 text-secondary-foreground shadow-md hover:bg-secondary-600 dark:bg-secondary-400 dark:hover:bg-secondary-500",
-        ghost: 
+        ghost:
           "hover:bg-accent/60 hover:text-accent-foreground dark:hover:bg-gray-700 dark:hover:text-gray-100", // For nav links or subtle actions
         link: "text-primary underline-offset-4 hover:underline",
       },

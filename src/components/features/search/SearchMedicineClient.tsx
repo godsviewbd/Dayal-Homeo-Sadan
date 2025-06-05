@@ -108,9 +108,6 @@ export function SearchMedicineClient() {
     if (searchName === "" && (searchPotency === "Any" || searchPotency === "")) {
       setIsLoading(false);
       setSearchResults([]);
-      // No need to set an error, the "No Results Found" or initial prompt will show due to searchAttempted=true and empty results.
-      // Optionally, provide a specific toast or message.
-      // toast({ title: "Empty Search", description: "Please enter a medicine name or select a specific potency.", variant: "default" });
       return;
     }
 
@@ -331,7 +328,14 @@ export function SearchMedicineClient() {
             <Button
               type="submit"
               disabled={isLoading || isSubmitting}
-              className="btn-primary h-12 w-full md:w-1/3 md:mx-auto"
+              className={cn(
+                // Base styles from the ShadCN Button component's default variant will apply for structure and focus.
+                // We explicitly set colors and shape here to match user spec 2.2 for *this specific button*.
+                "h-12 w-full font-medium rounded-lg transition-colors duration-150",
+                "bg-teal-500 hover:bg-teal-600 text-white", // Light mode colors from spec
+                "dark:bg-teal-400 dark:text-gray-900 dark:hover:bg-teal-500", // Dark mode colors from spec
+                "md:w-1/3 md:mx-auto" // Layout constraints
+              )}
             >
               {(isLoading || isSubmitting) ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
