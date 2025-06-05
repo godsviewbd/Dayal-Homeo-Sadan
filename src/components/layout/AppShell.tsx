@@ -22,6 +22,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       setTheme(storedTheme);
       document.documentElement.classList.toggle('dark', storedTheme === 'dark');
     } else {
+      // Default to light theme if no preference or system preference is found
+      // Or use systemPrefersDark to set initial theme based on OS
       const initialTheme = systemPrefersDark ? 'dark' : 'light';
       setTheme(initialTheme);
       document.documentElement.classList.toggle('dark', initialTheme === 'dark');
@@ -64,7 +66,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
-      {/* Mobile Header - Section 1.1 - Updated for centered brand */}
+      {/* Mobile Header - Centered brand */}
       <header className="sticky top-0 z-40 grid h-12 grid-cols-3 items-center border-b border-gray-200 bg-white/80 px-4 shadow-sm backdrop-blur-sm dark:border-gray-700 dark:bg-gray-900/80 md:hidden">
         <div className="flex justify-start">
           {/* Placeholder for a potential left icon, e.g., menu */}
@@ -80,7 +82,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      {/* Desktop Header - Section 1.2 */}
+      {/* Desktop Header */}
       <header className="sticky top-0 z-50 hidden h-16 w-full border-b border-gray-200 bg-white/80 shadow-sm backdrop-blur-sm dark:border-gray-700 dark:bg-gray-900/80 md:flex">
         <div className="container mx-auto flex h-full items-center px-8">
           <Link href="/" className="mr-8 flex items-center space-x-2" aria-label="HomeoWise Home">
@@ -112,7 +114,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <ThemeToggleButton className="mr-2 h-10 w-10" />
           <Button
             asChild
-            variant="default" // Explicitly use default variant for primary styling
+            variant="default" // Explicitly set variant
             className="h-11 min-h-[44px] px-4 py-2" // Specific sizing. Shadow, rounding, text color comes from variant.
           >
             <Link href="/inventory/add">
@@ -131,11 +133,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </main>
 
-      {/* Mobile Bottom Tab Bar - Section 1.1 */}
+      {/* Mobile Bottom Tab Bar */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 flex h-14 items-center justify-around border-t border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-900 md:hidden">
         <Link href="/" passHref legacyBehavior>
           <a className={cn(
-            "flex w-1/3 flex-col items-center justify-center py-1 text-xs",
+            "flex w-1/3 flex-col items-center justify-center py-1 text-xs", // w-1/3 for equal distribution of space for 3 items
             pathname === '/' ? "text-teal-500 dark:text-teal-300" : "text-gray-700 hover:text-teal-500 dark:text-gray-300 dark:hover:text-teal-300"
           )}>
             <Search className="h-6 w-6" />
@@ -143,7 +145,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </a>
         </Link>
         
-        <div className="relative w-14 flex-shrink-0"> {/* Container for FAB */}
+        <div className="relative w-14 flex-shrink-0"> {/* Container for FAB, width matches FAB, shrink-0 prevents squishing */}
           <Link href="/inventory/add" passHref legacyBehavior>
             <a 
               aria-label="Add Medicine"
@@ -156,7 +158,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         <Link href="/inventory" passHref legacyBehavior>
           <a className={cn(
-            "flex w-1/3 flex-col items-center justify-center py-1 text-xs",
+            "flex w-1/3 flex-col items-center justify-center py-1 text-xs", // w-1/3 for equal distribution
             (pathname === '/inventory' || pathname.startsWith('/inventory/')) ? "text-teal-500 dark:text-teal-300" : "text-gray-700 hover:text-teal-500 dark:text-gray-300 dark:hover:text-teal-300"
           )}>
             <Package className="h-6 w-6" />

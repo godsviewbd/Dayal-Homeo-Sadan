@@ -11,8 +11,8 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: // Primary
-          "bg-primary-500 text-white shadow-md hover:bg-primary-600 dark:bg-primary-300 dark:text-gray-900 dark:hover:bg-primary-400", // Corrected dark mode
+        default: // Primary - Directly using teal shades to ensure color application
+          "bg-teal-500 text-white shadow-md hover:bg-teal-600 dark:bg-teal-300 dark:text-gray-900 dark:hover:bg-teal-400",
         destructive:
           "bg-semantic-error text-semantic-error-fg shadow-md hover:bg-red-600 dark:bg-red-700 dark:hover:bg-red-800",
         outline: // Secondary / Outline
