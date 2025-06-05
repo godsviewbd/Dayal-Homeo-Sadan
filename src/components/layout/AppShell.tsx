@@ -74,7 +74,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="flex justify-center">
           <Link href="/" className="flex items-center space-x-2" aria-label="দয়াল হোমিও সদন Home">
             <Leaf className="h-5 w-5 text-primary-500 dark:text-primary-300" />
-            <span className="text-base font-semibold text-gray-900 dark:text-gray-100">দয়াল হোমিও সদন</span>
+            <span className="whitespace-nowrap text-base font-semibold text-gray-900 dark:text-gray-100">দয়াল হোমিও সদন</span>
           </Link>
         </div>
         <div className="flex justify-end">
