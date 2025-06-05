@@ -40,9 +40,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 asChild
                 className={cn(
                   "nav-link-desktop h-10 px-4 text-base font-medium text-gray-800 hover:text-teal-600 dark:text-gray-100 dark:hover:text-teal-300",
-                  pathname === link.href && "active text-primary-500 dark:text-primary-300"
+                  (pathname === link.href || (link.href === "/inventory" && pathname.startsWith("/inventory"))) && "active text-primary-500 dark:text-primary-300"
                 )}
-                data-active={pathname === link.href}
+                data-active={pathname === link.href || (link.href === "/inventory" && pathname.startsWith("/inventory"))}
               >
                 <Link href={link.href}>
                   <link.icon className="mr-2 h-5 w-5" />
@@ -65,12 +65,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Main Content Area */}
       <main id="main-content" className="flex-1">
-        {/* Adjusted top padding for mobile header */}
-        <div className="pt-0 md:pt-0"> {/* Mobile header is sticky, content will flow under it. Desktop has its own sticky header. */}
-             {/* Child pages apply their own top padding e.g. px-4 pt-6 ... */}
-            <div className="pb-14 md:pb-0">{/* This padding is for the fixed bottom mobile nav */}
-                 {children}
-            </div>
+        {/* Main content wrapper: pt-0 for mobile to account for sticky mobile header, desktop handles its own. */}
+        {/* pb-14 for mobile to clear fixed bottom nav, md:pb-0 for desktop. */}
+        <div className="pt-0 pb-14 md:pb-0">
+             {children}
         </div>
       </main>
 
@@ -86,12 +84,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </a>
         </Link>
         
-        <div className="relative flex flex-shrink-0 items-center justify-center px-4"> {/* Adjusted for better centering of FAB */}
+        {/* Container for the FAB to ensure it's a flex item for justify-around */}
+        <div className="relative flex w-14 flex-shrink-0 items-center justify-center">
           <Link href="/inventory/add" passHref legacyBehavior>
             <a 
               aria-label="Add Medicine"
               className="absolute bottom-3 flex h-14 w-14 items-center justify-center rounded-full bg-teal-500 text-white shadow-lg transition-transform duration-150 hover:bg-teal-600 active:scale-95 dark:bg-teal-400 dark:text-gray-900 dark:hover:bg-teal-500"
-              style={{ transform: 'translateY(-50%)' }} // Helps to visually float it more
+              style={{ transform: 'translateY(-50%)' }} // Visually floats the button
             >
               <PlusCircle className="h-7 w-7" />
             </a>
