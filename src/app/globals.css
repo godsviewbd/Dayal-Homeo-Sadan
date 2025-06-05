@@ -6,9 +6,9 @@
 @layer base {
   :root {
     /* Font variable - System fonts will be primary, PT Sans as fallback if --font-sans is kept */
-    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    /* --font-sans defined by Tailwind config now */
     
-    /* Light Mode HSL Variables from Spec */
+    /* Light Mode HSL Variables from Spec (Section 8.1) */
     --background: 180 30% 97%; /* #F0F8F7 - Light Desaturated Teal */
     --foreground: 180 10% 20%; /* Darker Teal/Grey for text */
     
@@ -18,6 +18,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 180 10% 20%;
     
+    /* Primary Brand Colors from Spec */
     --primary-brand: 174 25% 55%; /* #73AFAF - Sophisticated Teal - Primary brand color */
     --primary-brand-hover: 174 30% 45%; /* Hover for primary brand */
     --primary-brand-foreground: 0 0% 100%; /* White text on primary brand */
@@ -28,13 +29,14 @@
     --primary-200: 174 40% 80%; 
     --primary-300: 174 30% 70%; 
     --primary-400: 174 28% 60%; 
-    --primary-500: 174 25% 55%; /* Main primary */
-    --primary-600: 174 30% 45%; 
+    --primary-500: hsl(var(--primary-brand)); /* Main primary - was 174 25% 55%; */
+    --primary-600: hsl(var(--primary-brand-hover)); /* was 174 30% 45%; */
     --primary-700: 174 35% 35%; 
     --primary-800: 174 40% 25%;
     --primary-900: 174 45% 15%;
 
 
+    /* Secondary Accent Color from Spec (Section 8.1) */
     --secondary: 200 20% 60%; /* Complementary Blue/Green - HSL(200, 20%, 60%) */
     --secondary-foreground: 0 0% 100%; 
     
@@ -44,6 +46,7 @@
     --accent: hsl(var(--secondary)); /* Using secondary for accent for now */
     --accent-foreground: hsl(var(--secondary-foreground));
     
+    /* Semantic Colors from Spec (Section 8.1) */
     --destructive: 0 65% 50%; /* #FF4136 - Error Red HSL(0, 65%, 50%) */
     --destructive-foreground: 0 0% 100%;
     
@@ -54,13 +57,13 @@
     --warning-foreground: 180 10% 20%; /* Dark text for warning */
     
     --border: 180 20% 85%;   /* Lighter border */
-    --input: 180 20% 85%;  
-    --input-bg: 220 14% 96%; /* --color-gray-50: #F9FAFB */
+    --input: 180 20% 85%;  /* Default input border color */
+    --input-bg: hsl(var(--color-gray-50)); /* Default input background */
     --ring: hsl(var(--primary-brand)); /* Primary brand color for rings */
     
-    --radius: 0.5rem; /* Default: 0.5rem */
+    --radius: 0.5rem; /* Default: 0.5rem for ShadCN, can be overridden by rounded-lg, rounded-2xl etc. */
     
-    /* Neutrals from spec */
+    /* Neutrals from spec (Section 8.1) */
     --color-gray-50: 220 14% 96%;    /* #F9FAFB */
     --color-gray-100: 220 13% 91%; /* #F3F4F6 */
     --color-gray-200: 220 10% 85%;   /* #E5E7EB */
@@ -72,7 +75,7 @@
     --color-gray-800: 220 16% 16%; /* #1F2937 */
     --color-gray-900: 220 22% 11%;   /* #111827 */
 
-    /* Motion Variables from Spec */
+    /* Motion Variables from Spec (Section 13.1) */
     --motion-fast: 150ms;
     --motion-medium: 250ms;
     --motion-slow: 350ms;
@@ -82,22 +85,24 @@
   }
 
   .dark {
+    /* Dark Mode HSL Variables from Spec (Section 8.2) */
     --background: 180 10% 12%; /* Deep Teal-Gray HSL(180, 10%, 12%) */
     --foreground: 180 20% 88%; /* #D1E0E0 - Light Teal/Grey text */
     
     --card: hsl(var(--color-gray-800)); /* #1F2937 */
-    --card-foreground: hsl(var(--color-gray-100));
+    --card-foreground: hsl(var(--color-gray-100)); /* #F3F4F6 */
     
     --popover: hsl(var(--color-gray-800));
     --popover-foreground: hsl(var(--color-gray-100));
     
+    /* Dark Mode Primary Brand */
     --primary-brand: 174 25% 65%; /* Lighter Teal for dark mode primary actions */
     --primary-brand-hover: 174 28% 70%;
     --primary-brand-foreground: hsl(var(--color-gray-900)); /* Dark text on dark mode primary */
-    
+
     /* Dark mode primary palette (adjust if needed) */
-    --primary-300: 174 25% 65%; /* Main DM primary for text/icons */
-    --primary-400: 174 28% 70%; /* Hover for DM primary */
+    --primary-300: hsl(var(--primary-brand)); /* Main DM primary for text/icons - was 174 25% 65%; */
+    --primary-400: hsl(var(--primary-brand-hover)); /* Hover for DM primary - was 174 28% 70%; */
     
     --secondary: 200 20% 70%; 
     --secondary-foreground: hsl(var(--color-gray-900));
@@ -108,6 +113,7 @@
     --accent: hsl(var(--secondary));
     --accent-foreground: hsl(var(--secondary-foreground));
     
+    /* Dark Mode Semantic Colors */
     --destructive: 0 65% 65%; /* Lighter Red */
     --destructive-foreground: 0 0% 100%;
     
@@ -118,8 +124,8 @@
     --warning-foreground: hsl(var(--color-gray-900));
         
     --border: hsl(var(--color-gray-700)); /* #374151 */
-    --input: hsl(var(--color-gray-700));  
-    --input-bg: hsl(var(--color-gray-800)); /* #1F2937 */
+    --input: hsl(var(--color-gray-700));  /* Default input border for dark mode */
+    --input-bg: hsl(var(--color-gray-800)); /* Default input background for dark mode */
     --ring: hsl(var(--primary-brand)); 
   }
 }
@@ -130,46 +136,48 @@
   }
   body {
     @apply bg-background text-foreground font-sans antialiased; 
-    line-height: 1.5; 
+    line-height: 1.5; /* Default line height for body text */
   }
   
-  /* Heading scale from spec */
+  /* Heading scale from spec (Section 7.1) */
   h1, .h1 { /* Page Title */
-    @apply text-[32px] font-semibold leading-[1.25]; 
+    @apply text-display-lg font-semibold; /* 32px, leading 1.25 */
   }
   h2, .h2 { /* Card Title */
-    @apply text-[24px] font-semibold leading-[1.3]; 
+    @apply text-2xl font-semibold; /* 24px, leading 1.3 */
   }
   h3, .h3 { /* Section Heading */
-    @apply text-[20px] font-semibold leading-[1.3]; 
+    @apply text-xl font-semibold; /* 20px, leading 1.3 */
   }
   /* Other text sizes via utility classes based on spec:
-     Body Text/Labels: text-base (16px), leading-[1.5]
-     Captions/Help Text: text-sm (14px), leading-[1.4]
-     Tiny Text: text-xs (12px), leading-[1.4]
+     Body Text/Labels: text-base (16px), leading-normal (1.5)
+     Captions/Help Text: text-sm (14px), leading-snug (1.4)
+     Tiny Text: text-xs (12px), leading-snug (1.4)
   */
 
   *:focus-visible {
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
 
+  /* Skip Link Styling from Spec (Section 14.3), adjusted p-2 */
   .skip-link {
-    @apply sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 z-[200] p-3 bg-primary text-primary-foreground rounded-md shadow-lg;
+    @apply sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 z-[200] p-2 bg-primary text-primary-foreground rounded-md shadow-lg;
   }
 }
 
 @layer components {
   /* Base button styles from spec (Section 10) */
   .btn-primary {
-    @apply inline-flex items-center justify-center h-12 px-6 rounded-full font-medium text-[hsl(var(--primary-brand-foreground))] bg-[hsl(var(--primary-brand))] hover:bg-[hsl(var(--primary-brand-hover))] focus:outline-none focus:ring-2 focus:ring-ring transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed active:scale-95;
+    @apply inline-flex items-center justify-center h-12 px-6 rounded-full font-medium text-base text-[hsl(var(--primary-brand-foreground))] bg-[hsl(var(--primary-brand))] hover:bg-[hsl(var(--primary-brand-hover))] focus:outline-none focus:ring-2 focus:ring-ring transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed active:scale-95;
   }
   .btn-outline {
-    @apply inline-flex items-center justify-center h-12 px-6 rounded-full font-medium border-2 border-[hsl(var(--primary-brand))] text-[hsl(var(--primary-brand))] hover:bg-[hsl(var(--primary-50))] dark:hover:bg-[hsl(var(--primary-900))] transition-all duration-150 disabled:opacity-60 active:scale-95;
+    @apply inline-flex items-center justify-center h-12 px-6 rounded-full font-medium text-base border-2 border-[hsl(var(--primary-brand))] text-[hsl(var(--primary-brand))] hover:bg-primary-50 dark:hover:bg-primary-900 transition-all duration-150 disabled:opacity-60 active:scale-95;
   }
   .btn-destructive {
-    @apply inline-flex items-center justify-center h-12 px-6 rounded-full font-medium bg-destructive text-destructive-foreground hover:bg-red-600 dark:bg-red-700 dark:hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-200 dark:focus:ring-red-900 transition-all duration-150 disabled:opacity-60 active:scale-95;
+    @apply inline-flex items-center justify-center h-12 px-6 rounded-full font-medium text-base bg-destructive text-destructive-foreground hover:bg-red-600 dark:bg-red-700 dark:hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-200 dark:focus:ring-red-900 transition-all duration-150 disabled:opacity-60 active:scale-95;
   }
-  .btn-ghost { /* For nav links or subtle actions, consistent with ShadCN */
+  /* Shadcn ghost button is usually sufficient for nav links, kept for reference if needed */
+   .btn-ghost { 
      @apply inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2;
   }
 
@@ -180,7 +188,7 @@
     @apply bg-gray-50 dark:bg-gray-800; 
     @apply border-2 border-gray-200 dark:border-gray-700; 
     @apply placeholder:text-gray-400 dark:placeholder:text-gray-500; 
-    @apply focus:outline-none focus:border-[hsl(var(--primary-brand))] dark:focus:border-[hsl(var(--primary-brand))] focus:ring-2 focus:ring-ring dark:focus:ring-ring;
+    @apply focus:outline-none focus:border-primary-500 dark:focus:border-primary-300 focus:ring-2 focus:ring-primary-200 dark:focus:ring-primary-700;
     @apply transition-colors duration-150;
     @apply disabled:opacity-60 disabled:cursor-not-allowed;
   }
@@ -191,8 +199,7 @@
 
   /* Base select styling from spec (Section 11.2) */
   .select-base {
-    @apply input-base pr-10 appearance-none; 
-    /* Custom arrow will be handled by the component itself, ensures proper padding for it */
+    @apply input-base pr-10 appearance-none; /* pr-10 for custom arrow space */
   }
 
   /* Base card styling from spec (Section 12.1) */
@@ -210,16 +217,12 @@
     background-size: 200% 100%;
   }
   
-
   /* Active Nav Link Indicator for Desktop Header from spec (Section 1.2) */
   .nav-link-desktop { 
     @apply relative pb-1; /* Adjusted pb-1 from pb-2 for better visual balance */
   }
-  .nav-link-desktop.active::after {
+  .nav-link-desktop.active::after, .nav-link-desktop[data-active="true"]::after {
     content: "";
-    @apply absolute bottom-0 left-0 w-full h-0.5 bg-[hsl(var(--primary-brand))] rounded-full; 
+    @apply absolute bottom-0 left-0 w-full h-0.5 bg-primary rounded-full; 
   }
-
 }
-
-    

@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label"; // Keep if used, but labels are above inputs now
+import { Label } from "@/components/ui/label"; 
 import {
   Select,
   SelectContent,
@@ -14,15 +14,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { MedicineCard } from "./MedicineCard";
-import { MedicineCardSkeleton } from "./MedicineCardSkeleton";
+import { MedicineCardSkeleton } from "./MedicineCardSkeleton"; // Updated skeleton
 import type { Medicine } from "@/types";
 import { POTENCIES } from "@/types";
 import { handleParseHomeopathicQuery, fetchMedicinesForSearch, handleGetUniqueMedicineNames } from "@/lib/actions";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"; // Base card will be styled by globals
+// Card components are used but styling comes from globals/tailwind or .card-base
 import { Loader2, SearchIcon, AlertCircle, Wand2, Barcode, Info, ChevronDown } from "lucide-react";
 import type { ParseHomeopathicQueryOutput } from "@/ai/flows/parse-homeopathic-query";
 import { cn } from "@/lib/utils";
-import { Skeleton } from "@/components/ui/skeleton"; // For autocomplete skeleton
+// Skeleton used for autocomplete loading state as per spec 2.2
+// import { Skeleton } from "@/components/ui/skeleton"; // Already imported for MedicineCardSkeleton
 
 interface SearchFormData {
   query: string;
@@ -47,7 +48,7 @@ export function SearchMedicineClient() {
   const { control, handleSubmit, watch, setValue, setFocus, formState: {isSubmitting} } = useForm<SearchFormData>({
     defaultValues: {
       query: "",
-      potency: "Any",
+      potency: "Any", // Default to "Any Potency" which will be the first item
     },
   });
 
@@ -80,6 +81,9 @@ export function SearchMedicineClient() {
     }
   }, [currentQuery, allMedicineBaseNames]);
 
+  // Debounce for autocomplete suggestions might be needed (Section 14.5) - not implemented yet
+  // useEffect(() => { ... handle autocomplete with debounce ... }, [debouncedQuery, ...])
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node)) {
@@ -103,6 +107,7 @@ export function SearchMedicineClient() {
     let searchName = data.query.trim();
     let searchPotency = data.potency;
 
+    // AI Query Parsing (existing logic)
     if (searchName !== "") {
         try {
             const aiResult = await handleParseHomeopathicQuery({ query: searchName });
@@ -135,6 +140,8 @@ export function SearchMedicineClient() {
     const finalSearchPotency = searchPotency === "Any" ? undefined : searchPotency;
 
     try {
+      // Simulate delay for skeleton loaders to be visible
+      // await new Promise(resolve => setTimeout(resolve, 1500)); 
       const medicines = await fetchMedicinesForSearch(finalSearchName, finalSearchPotency);
       setSearchResults(medicines);
     } catch (e) {
@@ -145,11 +152,11 @@ export function SearchMedicineClient() {
     }
   };
 
-  const handleBarcodeScan = () => {
+  const handleBarcodeScan = () => { // Section 2.2
     setShowBarcodeScannerSheet(true);
     // Simulate scan result after a delay
     setTimeout(() => {
-        setValue("query", "Scanned: Arnica Montana 30C");
+        setValue("query", "Scanned: Arnica Montana 30C"); // UX Writing placeholder
         setShowBarcodeScannerSheet(false);
         handleSubmit(onSubmit)(); // Trigger search
     }, 2000);
@@ -160,10 +167,12 @@ export function SearchMedicineClient() {
     setNameSuggestions([]);
     setShowNameSuggestions(false);
     setFocus('query');
+    // Optionally trigger search on suggestion click:
+    // handleSubmit(onSubmit)(); 
   };
 
   const renderResults = () => {
-    if (isLoading || isSubmitting) {
+    if (isLoading || isSubmitting) { // Section 2.3 Skeleton Loader
       return (
         <div className="mt-8 space-y-4">
           <MedicineCardSkeleton />
@@ -173,7 +182,7 @@ export function SearchMedicineClient() {
       );
     }
 
-    if (error) {
+    if (error) { // Section 2.5 Error Card
       return (
         <div className="mt-6 rounded-lg bg-red-50 p-5 dark:bg-red-900/20 border-l-4 border-red-500">
           <div className="flex items-center">
@@ -185,26 +194,28 @@ export function SearchMedicineClient() {
       );
     }
 
-    if (searchAttempted && searchResults.length === 0) {
+    if (searchAttempted && searchResults.length === 0) { // Section 2.5 No Results Card
       return (
-         <div className="mt-6 rounded-lg bg-gray-50 p-5 dark:bg-gray-800 border-l-4 border-primary-500">
+         <div className="mt-6 rounded-lg bg-gray-50 p-5 dark:bg-gray-800 border-l-4 border-teal-500">
           <div className="flex items-center">
-            <Info className="h-6 w-6 text-primary-600 dark:text-primary-300 mr-3" />
+            <Info className="h-6 w-6 text-teal-600 dark:text-teal-300 mr-3" />
             <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">No Results Found</h3>
           </div>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            No medicines matched your search criteria. Try adjusting your query or filters.
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400"> 
+            {/* UX Writing: Section 15.5 */}
+            No matches found. Try a different name or check spelling.
           </p>
         </div>
       );
     }
 
-    if (searchResults.length > 0) {
+    if (searchResults.length > 0) { // Section 2.6 Search Results Grid
       return (
         <div className="mt-8">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4"> 
             Search Results <span className="text-base font-normal text-gray-600 dark:text-gray-400">({searchResults.length} found)</span>
           </h2>
+          {/* Grid container styling as per Section 2.6 */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-3 lg:gap-8">
             {searchResults.map((medicine) => (
               <MedicineCard key={medicine.id} medicine={medicine} />
@@ -213,15 +224,30 @@ export function SearchMedicineClient() {
         </div>
       );
     }
+    // UX Writing: Section 15.5 - Initial state before search
+    if (!searchAttempted && !isLoading && !isSubmitting) {
+        return (
+            <div className="mt-6 rounded-lg bg-gray-50 p-5 dark:bg-gray-800 text-center">
+                 <SearchIcon className="h-10 w-10 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Start typing a medicine name to search your inventory.
+                </p>
+            </div>
+        );
+    }
     return null;
   };
 
   return (
+    // Container padding - Section 2.1
     <div className="px-4 pt-6 pb-24 md:px-8">
+      {/* Single-column card with max-width constraints - Section 2.1 */}
       <div className="mx-auto w-full max-w-md md:max-w-lg lg:max-w-xl">
+        {/* "Intelligent Medicine Search" Card styling - Section 2.2 */}
         <div className="rounded-2xl bg-white p-6 shadow-lg dark:bg-gray-800 md:p-8">
-          <div className="flex items-center mb-4">
-            <SearchIcon className="h-8 w-8 text-primary-500 dark:text-primary-300 mr-3" />
+          {/* Header (Icon + Title + Subtitle) - Section 2.2 */}
+          <div className="flex items-center mb-6"> {/* Increased mb from 4 to 6 */}
+            <SearchIcon className="h-8 w-8 text-teal-500 dark:text-teal-300 mr-3" />
             <div>
               <h1 className="text-2xl font-semibold leading-snug text-gray-900 dark:text-gray-100">Intelligent Medicine Search</h1>
               <p className="mt-1 text-base text-gray-600 dark:text-gray-400">
@@ -230,7 +256,9 @@ export function SearchMedicineClient() {
             </div>
           </div>
           
+          {/* Form field group - Section 2.2 */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {/* Search Query Input with Barcode Icon Button - Section 2.2 */}
             <div className="relative">
               <Label htmlFor="query" className="sr-only">Search medicine by name or barcode</Label>
               <Controller
@@ -240,9 +268,9 @@ export function SearchMedicineClient() {
                   <Input
                     id="query"
                     type="text"
-                    placeholder="e.g., Arnica Montana 30C"
+                    placeholder="e.g., Arnica Montana 30C" // UX Writing 15.2
                     {...field}
-                    className="input-base pr-12" // input-base handles h-12, px-4 etc.
+                    className="input-base pr-12" // input-base from globals.css + pr for icon
                     onFocus={() => currentQuery && nameSuggestions.length > 0 && setShowNameSuggestions(true)}
                     autoComplete="off"
                     aria-label="Search medicine by name or barcode"
@@ -252,18 +280,21 @@ export function SearchMedicineClient() {
               <button 
                 type="button" 
                 onClick={handleBarcodeScan} 
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-primary-500 focus:outline-none dark:text-gray-400" 
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-teal-500 focus:outline-none dark:text-gray-400" 
                 aria-label="Scan barcode"
               >
                 <Barcode className="h-6 w-6" />
               </button>
               
+              {/* Autocomplete loading skeleton - Section 2.2 */}
               {isLoadingSuggestions && (
-                <div className="mt-2 space-y-1">
-                  <Skeleton className="h-3 w-full max-w-xs rounded-full" />
-                  <Skeleton className="h-3 w-3/4 max-w-xs rounded-full" />
+                <div className="mt-2 space-y-1 h-[48px] flex flex-col justify-around"> {/* Approx 48px height */}
+                  <div className="h-3 bg-gray-200 rounded-full animate-pulse w-full max-w-xs dark:bg-gray-700"></div>
+                  <div className="h-3 bg-gray-200 rounded-full animate-pulse w-3/4 max-w-xs dark:bg-gray-700"></div>
+                  <div className="h-3 bg-gray-200 rounded-full animate-pulse w-1/2 max-w-xs dark:bg-gray-700"></div>
                 </div>
               )}
+              {/* Autocomplete suggestions dropdown - Section 2.2 */}
               {showNameSuggestions && nameSuggestions.length > 0 && !isLoadingSuggestions && (
                 <div
                   ref={suggestionsRef}
@@ -275,9 +306,9 @@ export function SearchMedicineClient() {
                       key={index}
                       className="cursor-pointer px-4 py-2 text-gray-800 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-600"
                       onClick={() => handleSuggestionClick(suggestion)}
-                      onMouseDown={(e) => e.preventDefault()} 
+                      onMouseDown={(e) => e.preventDefault()} // Prevents input blur before click
                       role="option"
-                      aria-selected={false}
+                      aria-selected={false} // Or manage selection state
                     >
                       {suggestion}
                     </div>
@@ -286,6 +317,7 @@ export function SearchMedicineClient() {
               )}
             </div>
 
+            {/* Potency Select Dropdown - Section 2.2 */}
             <div className="relative">
               <Label htmlFor="potency" className="sr-only">Select potency</Label>
               <Controller
@@ -294,6 +326,7 @@ export function SearchMedicineClient() {
                 render={({ field }) => (
                   <Select onValueChange={field.onChange} value={field.value}>
                     <SelectTrigger id="potency" className="select-base" aria-label="Select potency">
+                      {/* SelectValue placeholder needs to be dynamic or set if field.value is empty/default */}
                       <SelectValue placeholder="Select potency (e.g., 30C, 200)" />
                     </SelectTrigger>
                     <SelectContent>
@@ -305,30 +338,32 @@ export function SearchMedicineClient() {
                   </Select>
                 )}
               />
-               {/* Custom arrow for select is part of .select-base implicit styling or SelectTrigger adjustment */}
+               {/* Custom arrow for select is now part of SelectTrigger styling/component */}
             </div>
             
+            {/* Search Button - Section 2.2 & 15.1 */}
             <Button 
               type="submit" 
               disabled={isLoading || isSubmitting} 
-              className="btn-primary h-12 w-full md:w-auto md:mx-auto md:px-8"
+              className="btn-primary h-12 w-full md:w-auto md:mx-auto md:px-8" // btn-primary from globals.css
             >
               {(isLoading || isSubmitting) ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
                 <>
                   <SearchIcon className="mr-2 h-5 w-5" />
-                  Find Medicine
+                  Find Medicine 
                 </>
               )}
             </Button>
           </form>
         </div>
 
+        {/* AI Query Interpretation Card - Section 2.4 */}
         {aiParsedInfo && (
-          <div className="mx-auto mt-6 max-w-md rounded-lg border-l-4 border-primary-500 bg-primary-50 p-5 dark:bg-primary-900/20 md:max-w-lg lg:max-w-xl">
+          <div className="mx-auto mt-6 max-w-md rounded-lg border-l-4 border-teal-500 bg-teal-50 p-5 dark:bg-teal-900/20 md:max-w-lg lg:max-w-xl">
             <div className="flex items-center">
-              <Wand2 className="mr-3 h-6 w-6 text-primary-600 dark:text-primary-300" />
+              <Wand2 className="mr-3 h-6 w-6 text-teal-600 dark:text-teal-300" />
               <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">AI Query Interpretation</h3>
             </div>
             <div className="mt-3 space-y-2 text-sm text-gray-600 dark:text-gray-400">
@@ -339,10 +374,14 @@ export function SearchMedicineClient() {
           </div>
         )}
 
-        {renderResults()}
+        {/* region for search results for ARIA live - Section 14.4 */}
+        <div role="region" aria-live="polite" aria-atomic="true">
+            {renderResults()}
+        </div>
       </div>
 
-      {/* Barcode Scanner Bottom Sheet */}
+      {/* Barcode Scanner Bottom Sheet - Section 2.2 */}
+      {/* Overlay for background click to close */}
       {showBarcodeScannerSheet && (
         <div 
             className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm" 
@@ -365,7 +404,7 @@ export function SearchMedicineClient() {
                 <Barcode className="h-24 w-24 text-gray-400 dark:text-gray-500" />
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Simulating barcode scan...</p>
-            <Loader2 className="h-8 w-8 animate-spin text-primary-500" />
+            <Loader2 className="h-8 w-8 animate-spin text-teal-500" />
             <Button variant="outline" onClick={() => setShowBarcodeScannerSheet(false)} className="mt-6">Cancel</Button>
         </div>
       </div>

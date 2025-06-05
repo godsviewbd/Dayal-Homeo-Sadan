@@ -17,9 +17,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* PT Sans is defined as --font-sans in globals.css, loaded via Tailwind config */}
-        {/* No need for direct Google Fonts link if relying on system fonts or already configured in Tailwind */}
+        {/* System fonts are now primary via Tailwind config, no direct link needed */}
       </head>
+      {/* font-sans is now the system font stack from tailwind.config.ts */}
       <body className="font-sans antialiased bg-background text-foreground">
          <a href="#main-content" className="skip-link">Skip to content</a>
         <AppShell>{children}</AppShell>

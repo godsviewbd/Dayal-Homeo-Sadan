@@ -17,7 +17,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
-      {/* Desktop Header */}
+      {/* Desktop Header - Section 1.2 */}
       <header className="sticky top-0 z-50 hidden h-16 w-full border-b border-gray-200 bg-white/80 shadow-sm backdrop-blur-sm dark:border-gray-700 dark:bg-gray-900/80 md:flex">
         <div className="container mx-auto flex h-full items-center px-8">
           <Link href="/" className="mr-8 flex items-center space-x-2" aria-label="HomeoWise Home">
@@ -31,9 +31,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 variant="ghost"
                 asChild
                 className={cn(
-                  "nav-link-desktop h-10 px-4 text-base font-medium text-gray-800 hover:text-primary-600 dark:text-gray-100 dark:hover:text-primary-300",
-                  pathname === link.href && "active text-primary-500 dark:text-primary-300"
+                  "nav-link-desktop h-10 px-4 text-base font-medium text-gray-800 hover:text-teal-600 dark:text-gray-100 dark:hover:text-teal-300",
+                  pathname === link.href && "active text-primary-500 dark:text-primary-300" // 'active' class for CSS rule
                 )}
+                data-active={pathname === link.href} // data-active for CSS rule if needed
               >
                 <Link href={link.href}>
                   <link.icon className="mr-2 h-5 w-5" />
@@ -44,7 +45,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </nav>
           <Button
             asChild
-            className="h-11 min-h-[44px] rounded-full bg-primary-500 px-4 py-2 text-base font-medium text-white shadow-md hover:bg-primary-600 active:scale-95 dark:bg-primary-400 dark:text-gray-900 dark:hover:bg-primary-500"
+            // Styling from Section 1.2 for "Add Medicine" button (Desktop)
+            className="h-11 min-h-[44px] rounded-full bg-teal-500 px-4 py-2 text-base font-medium text-white shadow-md hover:bg-teal-600 active:scale-95 dark:bg-teal-400 dark:text-gray-900 dark:hover:bg-teal-500 transition-transform duration-150"
           >
             <Link href="/inventory/add">
               <PlusCircle className="mr-2 h-5 w-5" />
@@ -56,31 +58,34 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Main Content Area */}
       <main id="main-content" className="flex-1">
-        {/* Mobile: px-4, Tablet: px-6, Desktop: px-8 / py-6, sm:py-8, lg:py-12 */}
         {/* Padding applied by child pages based on spec */}
-        <div className="pb-14 md:pb-0"> {/* Padding bottom for mobile bottom nav */}
+        {/* pb-14 for mobile bottom nav (h-14), md:pb-0 to remove it on larger screens */}
+        <div className="pb-14 md:pb-0"> 
             {children}
         </div>
       </main>
 
-      {/* Mobile Bottom Tab Bar */}
+      {/* Mobile Bottom Tab Bar - Section 1.1 */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 flex h-14 items-center justify-around border-t border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-900 md:hidden">
         <Link href="/" passHref legacyBehavior>
           <a className={cn(
             "flex flex-1 flex-col items-center justify-center text-xs",
-            pathname === '/' ? "text-primary-500 dark:text-primary-300" : "text-gray-700 dark:text-gray-300"
+            pathname === '/' ? "text-teal-500 dark:text-teal-300" : "text-gray-700 dark:text-gray-300"
           )}>
             <Search className="h-6 w-6" />
             <span>Search</span>
           </a>
         </Link>
         
-        {/* Floating Action Button for Add */}
-        <div className="relative flex-1">
+        {/* Floating Action Button for Add - Section 1.1 */}
+        {/* Relative positioning for the container, absolute for the button itself */}
+        <div className="relative flex flex-1 items-center justify-center"> {/* flex-1 to take up space */}
           <Link href="/inventory/add" passHref legacyBehavior>
-            <a className="absolute -top-7 left-1/2 flex h-14 w-14 -translate-x-1/2 transform items-center justify-center rounded-full bg-primary-500 text-white shadow-lg hover:bg-primary-600 active:scale-95 dark:bg-primary-400 dark:text-gray-900 dark:hover:bg-primary-500">
+            <a 
+              aria-label="Add Medicine" // UX Writing Guideline 15.1
+              className="absolute -top-7 flex h-14 w-14 items-center justify-center rounded-full bg-teal-500 text-white shadow-lg transition-transform duration-150 hover:bg-teal-600 active:scale-95 dark:bg-teal-400 dark:text-gray-900 dark:hover:bg-teal-500"
+            >
               <PlusCircle className="h-7 w-7" />
-              <span className="sr-only">Add Medicine</span>
             </a>
           </Link>
         </div>
@@ -88,7 +93,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Link href="/inventory" passHref legacyBehavior>
           <a className={cn(
             "flex flex-1 flex-col items-center justify-center text-xs",
-            pathname.startsWith('/inventory') ? "text-primary-500 dark:text-primary-300" : "text-gray-700 dark:text-gray-300"
+            pathname.startsWith('/inventory') ? "text-teal-500 dark:text-teal-300" : "text-gray-700 dark:text-gray-300"
           )}>
             <Package className="h-6 w-6" />
             <span>Inventory</span>
@@ -96,7 +101,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </Link>
       </nav>
 
-      {/* Desktop Footer */}
+      {/* Desktop Footer - Section 1.3 */}
       <footer className="hidden border-t border-gray-200 bg-white py-4 dark:border-gray-700 dark:bg-gray-900 md:block">
         <div className="container mx-auto flex flex-col items-center justify-center text-center">
           <p className="text-xs text-gray-600 dark:text-gray-400">
