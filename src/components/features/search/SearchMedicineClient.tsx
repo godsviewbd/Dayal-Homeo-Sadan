@@ -34,7 +34,7 @@ export function SearchMedicineClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [aiParsedInfo, setAiParsedInfo] = useState<ParseHomeopathicQueryOutput | null>(null);
+  const [aiParsedInfo, setAiParsedInfo] = useState<ParseHomeopathicQueryOutput | null>(null); // State kept for logic
   const [searchAttempted, setSearchAttempted] = useState(false);
 
   const [allMedicineBaseNames, setAllMedicineBaseNames] = useState<string[]>([]);
@@ -95,7 +95,7 @@ export function SearchMedicineClient() {
   const onSubmit = async (data: SearchFormData) => {
     setIsLoading(true);
     setError(null);
-    setAiParsedInfo(null);
+    setAiParsedInfo(null); // Reset AI info
     setShowNameSuggestions(false);
     setSearchAttempted(true);
     setSearchResults([]);
@@ -115,7 +115,7 @@ export function SearchMedicineClient() {
             if ('error' in aiResult) {
                 console.warn("SearchClient: AI parsing failed, proceeding with form data. Error:", aiResult.error);
             } else {
-                setAiParsedInfo(aiResult);
+                setAiParsedInfo(aiResult); // Still set for internal use if needed, but not displayed
                 if (aiResult.medicineName) searchName = aiResult.medicineName.trim();
                 if (aiResult.potency && aiResult.potency.toLowerCase() !== "any potency" && data.potency === "Any") {
                    let clientMatchedPotency: string | undefined = undefined;
@@ -328,19 +328,7 @@ export function SearchMedicineClient() {
           </form>
         </div>
 
-        {aiParsedInfo && (
-          <div className="mx-auto mt-6 max-w-md rounded-lg border-l-4 border-teal-500 bg-teal-50 dark:bg-teal-900/20 p-5 md:max-w-lg lg:max-w-xl">
-            <div className="flex items-center">
-              <Wand2 className="mr-3 h-6 w-6 text-teal-600 dark:text-teal-300" />
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">AI Query Interpretation</h3>
-            </div>
-            <div className="mt-3 space-y-2 text-sm text-gray-600 dark:text-gray-400">
-              <p><strong className="font-medium text-gray-800 dark:text-gray-100">Detected Medicine:</strong> {aiParsedInfo.medicineName || "Not specified"}</p>
-              <p><strong className="font-medium text-gray-800 dark:text-gray-100">Detected Potency:</strong> {aiParsedInfo.potency || "Not specified"}</p>
-              <p><strong className="font-medium text-gray-800 dark:text-gray-100">Detected Intent:</strong> {aiParsedInfo.intent || "Not specified"}</p>
-            </div>
-          </div>
-        )}
+        {/* AI Query Interpretation box removed from here */}
 
         <div role="region" aria-live="polite" aria-atomic="true">
             {renderResults()}
@@ -350,3 +338,4 @@ export function SearchMedicineClient() {
     </div>
   );
 }
+
