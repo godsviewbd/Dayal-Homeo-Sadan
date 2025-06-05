@@ -13,14 +13,16 @@ interface MedicineCardProps {
 export function MedicineCard({ medicine }: MedicineCardProps) {
   return (
     <div className="card-base flex h-full flex-col justify-between overflow-hidden p-6 transition-all duration-200 ease-out hover:scale-[1.01] hover:shadow-xl dark:bg-gray-800">
-      {/* Top section: Name and Badge managed by Flexbox */}
+      {/* Top section: Name and Badge managed by Grid */}
       <div>
-        {/* Container for Name and Badge - Using Flexbox */}
-        <div className="mb-3 flex items-start justify-between">
-          <h3 className="min-w-0 flex-grow mr-3 text-xl font-semibold text-gray-900 dark:text-gray-100">
+        {/* Container for Name and Badge - Using Grid */}
+        <div className="mb-3 grid grid-cols-[1fr_auto] items-start gap-x-2">
+          {/* Medicine Name - constrained to the first grid column */}
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 break-words">
             {medicine.name}
           </h3>
-          <div className="mt-1 flex-shrink-0"> {/* mt-1 for slight vertical alignment if title wraps */}
+          {/* Quantity Badge - constrained to the second grid column, mt-1 for slight vertical alignment if title wraps */}
+          <div className="mt-1">
             <QuantityBadge quantity={medicine.quantity} />
           </div>
         </div>
