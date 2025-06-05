@@ -3,7 +3,7 @@
 
 import type { Medicine, Potency, Preparation } from "@/types";
 import { POTENCIES, PREPARATIONS, medicineSchema } from "@/types"; // Import medicineSchema from @/types
-import { useFormState } from "react-dom";
+import { useActionState } from "react"; // Changed from react-dom
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
@@ -40,7 +40,7 @@ export function MedicineForm({ action, initialData, formType }: MedicineFormProp
   const router = useRouter();
   const { toast } = useToast();
 
-  const [state, formAction] = useFormState(action, null);
+  const [state, formAction] = useActionState(action, null); // Changed from useFormState
 
   const {
     register,
