@@ -332,7 +332,7 @@ export function SearchMedicineClient() {
             <p className="text-muted-foreground">
               No medicines matched your search criteria. Try adjusting your query or filters.
               Check your CSV file at <code>src/data/medicine_name.csv</code> for correct data and headers:
-              <code>"Medicine Name","Potency/Power","Box Number","Total Number Of Medicine"</code>.
+              <code>"Medicine Name","Potecy/Power","Box Number","Total Number Of Medicine"</code>.
               Also, review server console logs for detailed CSV parsing information.
             </p>
           </CardContent>
