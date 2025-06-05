@@ -15,11 +15,12 @@ export function MedicineCard({ medicine }: MedicineCardProps) {
     <div className="card-base relative flex flex-col justify-between cursor-pointer overflow-hidden transition-all duration-200 ease-out hover:scale-[1.01] hover:shadow-xl dark:bg-gray-800 h-full">
       {/* Top section: Name and Badge managed by Flexbox */}
       <div>
-        <div className="flex items-start justify-between mb-3">
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex-grow min-w-0"> {/* Removed mr-3, added min-w-0 */}
+        {/* Container for Name and Badge - Relative positioning context for the badge */}
+        <div className="relative mb-3">
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 pr-[140px]"> {/* Generous padding on the right */}
             {medicine.name}
           </h3>
-          <div className="flex-shrink-0 mt-1 ml-2"> {/* Added ml-2 for a small gap */}
+          <div className="absolute top-0 right-0 mt-1"> {/* Badge positioned absolutely */}
             <QuantityBadge quantity={medicine.quantity} />
           </div>
         </div>
