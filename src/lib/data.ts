@@ -1,26 +1,26 @@
 // Simulates a database for homeopathic medicines
-// For a real application, replace this with a proper database integration (e.g., Firebase Firestore, Supabase, Prisma with PostgreSQL/MySQL)
+// This file has been modified to remove placeholder data.
+// You can populate the 'medicines' array below with data from your CSV
+// or implement logic to read and parse your "medicine_name.csv" file.
+// For a real application, replace this with a proper database integration.
 
-import type { Medicine, Potency, Preparation } from '@/types';
+import type { Medicine } from '@/types';
 
-let medicines: Medicine[] = [
-  { id: '1', name: 'Arnica Montana', potency: '30C', preparation: 'Pellets', batchNumber: 'B001', expirationDate: '2025-12-31', location: 'Shelf A1', quantity: 100, supplier: 'Boiron', alternateNames: ['Leopard\'s Bane'] },
-  { id: '2', name: 'Nux Vomica', potency: '200C', preparation: 'Globules', batchNumber: 'B002', expirationDate: '2026-06-30', location: 'Shelf B2', quantity: 5, supplier: 'Hahnemann Labs', alternateNames: [] },
-  { id: '3', name: 'Pulsatilla Nigricans', potency: '6X', preparation: 'Liquid', batchNumber: 'B003', expirationDate: '2024-12-31', location: 'Fridge 1', quantity: 25, supplier: 'Boiron', alternateNames: ['Wind Flower'] },
-  { id: '4', name: 'Belladonna', potency: '30C', preparation: 'Tablets', batchNumber: 'B004', expirationDate: '2025-08-15', location: 'Shelf A2', quantity: 60, supplier: 'Schwabe', alternateNames: ['Deadly Nightshade'] },
-  { id: '5', name: 'Lycopodium Clavatum', potency: '1M', preparation: 'Pellets', batchNumber: 'B005', expirationDate: '2027-01-20', location: 'Shelf C1', quantity: 12, supplier: 'SBL', alternateNames: ['Clubmoss'] },
-  { id: '6', name: 'Calendula Officinalis', potency: 'LM1', preparation: 'Ointment', batchNumber: 'B006', expirationDate: '2024-11-30', location: 'Cabinet 3', quantity: 3, supplier: 'Boiron', alternateNames: ['Marigold'] },
-];
+// Initialize with an empty array.
+// You will need to populate this array with data from your CSV.
+// Example:
+// const medicinesFromCSV = [
+//   { id: '1', name: 'YourMed1', potency: '30C', preparation: 'Pellets', batchNumber: 'B001', expirationDate: '2025-12-31', location: 'Shelf A1', quantity: 100, supplier: 'Boiron', alternateNames: ['ExampleAltName'] },
+//   // ... more medicines from your CSV
+// ];
+// medicines = medicinesFromCSV;
+let medicines: Medicine[] = [];
 
-// Make data persistent across requests in a dev environment by attaching to global
-// In a real app, this would be a database.
-if (process.env.NODE_ENV === 'development') {
-  if (!global._medicines) {
-    global._medicines = medicines;
-  }
-  medicines = global._medicines;
-}
-
+// Note: The global._medicines logic for development persistence has been removed
+// as the data source is now intended to be managed by the user (e.g., via CSV).
+// If you need persistence for the in-memory array during development after populating it,
+// you might consider re-adding a similar mechanism or ensuring your data loading
+// logic runs on each relevant server request/initialization.
 
 export async function getMedicines(): Promise<Medicine[]> {
   // Simulate API delay
@@ -38,6 +38,7 @@ export async function addMedicine(medicineData: Omit<Medicine, 'id'>): Promise<M
   await new Promise(resolve => setTimeout(resolve, 100));
   const newMedicine: Medicine = { ...medicineData, id: String(Date.now() + Math.random()) }; // More robust ID for demo
   medicines.push(newMedicine);
+  // If you are managing persistence (e.g. writing back to a file or DB), do it here.
   return JSON.parse(JSON.stringify(newMedicine));
 }
 
@@ -46,6 +47,7 @@ export async function updateMedicine(id: string, updates: Partial<Omit<Medicine,
   const index = medicines.findIndex(m => m.id === id);
   if (index === -1) return null;
   medicines[index] = { ...medicines[index], ...updates };
+  // If you are managing persistence, do it here.
   return JSON.parse(JSON.stringify(medicines[index]));
 }
 
@@ -53,12 +55,13 @@ export async function deleteMedicine(id: string): Promise<boolean> {
   await new Promise(resolve => setTimeout(resolve, 100));
   const initialLength = medicines.length;
   medicines = medicines.filter(m => m.id !== id);
+  // If you are managing persistence, do it here.
   return medicines.length < initialLength;
 }
 
 export async function searchMedicinesByNameAndPotency(nameQuery?: string, potencyQuery?: string): Promise<Medicine[]> {
   await new Promise(resolve => setTimeout(resolve, 100));
-  let results = [...medicines];
+  let results = [...medicines]; // Operate on a copy
   
   if (nameQuery) {
     const lowerNameQuery = nameQuery.toLowerCase();
