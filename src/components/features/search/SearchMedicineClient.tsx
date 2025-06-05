@@ -32,7 +32,7 @@ export function SearchMedicineClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [aiParsedInfo, setAiParsedInfo] = useState<ParseHomeopathicQueryOutput | null>(null);
-  const [initialLoadDone, setInitialLoadDone] = useState(false);
+  const [searchAttempted, setSearchAttempted] = useState(false); // New state
 
   const [allMedicineBaseNames, setAllMedicineBaseNames] = useState<string[]>([]);
   const [nameSuggestions, setNameSuggestions] = useState<string[]>([]);
@@ -43,12 +43,12 @@ export function SearchMedicineClient() {
   const { control, handleSubmit, watch, setValue, setFocus, formState: {isSubmitting} } = useForm<SearchFormData>({
     defaultValues: {
       query: "",
-      potency: "Any", // Ensure "Any" is the default
+      potency: "Any",
     },
   });
 
   const currentQuery = watch("query");
-  const currentPotency = watch("potency");
+  // const currentPotency = watch("potency"); // Not directly used in new conditional rendering
 
   // Fetch all unique medicine names for autocomplete
   useEffect(() => {
@@ -60,7 +60,7 @@ export function SearchMedicineClient() {
         console.log("SearchClient: Fetched unique names:", names);
       } catch (e) {
         console.error("SearchClient: Failed to fetch unique medicine names for autocomplete:", e);
-        setError("Failed to load name suggestions.");
+        // setError("Failed to load name suggestions."); // Avoid overwriting search errors
       }
     };
     fetchNames();
@@ -72,7 +72,7 @@ export function SearchMedicineClient() {
       const filtered = allMedicineBaseNames.filter(name =>
         name.toLowerCase().includes(currentQuery.toLowerCase())
       );
-      setNameSuggestions(filtered.slice(0, 10)); // Limit suggestions
+      setNameSuggestions(filtered.slice(0, 10));
       setShowNameSuggestions(filtered.length > 0);
       console.log("SearchClient: Generated suggestions for '"+ currentQuery +"':", filtered.slice(0,10));
     } else {
@@ -94,43 +94,17 @@ export function SearchMedicineClient() {
     };
   }, [suggestionsRef]);
 
-
-  // Fetch all medicines on initial load or when filters are cleared
-  useEffect(() => {
-    const performInitialSearch = async () => {
-      setIsLoading(true);
-      setError(null);
-      console.log("SearchClient: Performing initial search for all medicines.");
-      try {
-        // Pass undefined for name and potency to fetch all
-        const medicines = await fetchMedicinesForSearch(undefined, undefined); 
-        setSearchResults(medicines);
-        console.log(`SearchClient: Initial search returned ${medicines.length} medicines.`);
-      } catch (e) {
-        setError("Failed to load initial medicine list.");
-        console.error("SearchClient: Initial search error:", e);
-      } finally {
-        setIsLoading(false);
-        setInitialLoadDone(true);
-      }
-    };
-    if (!initialLoadDone) { // Only run once on initial mount
-        performInitialSearch();
-    }
-  }, [initialLoadDone]);
-
-
   const onSubmit = async (data: SearchFormData) => {
     console.log("SearchClient: onSubmit called with data:", data);
     setIsLoading(true);
     setError(null);
     setAiParsedInfo(null);
-    setShowNameSuggestions(false); 
+    setShowNameSuggestions(false);
+    setSearchAttempted(true); // Mark that a search has been attempted
 
-    let searchName = data.query.trim(); // Trim the query
+    let searchName = data.query.trim();
     let searchPotency = data.potency;
 
-    // Only use AI if query is not empty AND potency is "Any" (or AI can refine potency)
     if (searchName !== "") {
         console.log("SearchClient: Query is not empty, attempting AI parse for:", searchName);
         try {
@@ -141,7 +115,7 @@ export function SearchMedicineClient() {
             } else {
                 setAiParsedInfo(aiResult);
                 if (aiResult.medicineName) {
-                    searchName = aiResult.medicineName.trim(); 
+                    searchName = aiResult.medicineName.trim();
                     console.log("SearchClient: Using AI detected name:", searchName);
                 }
 
@@ -149,18 +123,17 @@ export function SearchMedicineClient() {
                    let clientMatchedPotency: string | undefined = undefined;
                    const aiPotencyRaw = aiResult.potency.toLowerCase();
                    
-                   for (const canonicalP of POTENCIES) { 
-                       const canonicalPLower = canonicalP.toLowerCase(); 
-                       // More direct matching for potency from AI
+                   for (const canonicalP of POTENCIES) {
+                       const canonicalPLower = canonicalP.toLowerCase();
                        const pattern = new RegExp(`\\b${canonicalPLower.replace(/(\d+)/, '$1(?:c|x)?')}\\b`, 'i');
                        if (pattern.test(aiPotencyRaw)) {
-                           clientMatchedPotency = canonicalP; 
+                           clientMatchedPotency = canonicalP;
                            break;
                        }
                    }
                    if (clientMatchedPotency) {
                      searchPotency = clientMatchedPotency;
-                     setValue('potency', clientMatchedPotency); 
+                     setValue('potency', clientMatchedPotency);
                      console.log("SearchClient: Using AI detected and client-matched potency:", searchPotency);
                    } else {
                      console.log("SearchClient: AI detected potency '"+aiResult.potency+"' but could not match to client POTENCIES. Using form potency:", data.potency);
@@ -169,10 +142,10 @@ export function SearchMedicineClient() {
             }
         } catch (aiError) {
             console.error("SearchClient: Critical error during AI parsing:", aiError);
+            // setError("AI processing failed. Please try a simpler query."); // Optionally set specific AI error
         }
     }
     
-    // If query is empty after trim, treat as search all for names
     const finalSearchName = searchName === "" ? undefined : searchName;
     const finalSearchPotency = searchPotency === "Any" ? undefined : searchPotency;
 
@@ -182,7 +155,7 @@ export function SearchMedicineClient() {
       setSearchResults(medicines);
       console.log(`SearchClient: Search returned ${medicines.length} results.`);
     } catch (e) {
-      setError("Failed to fetch medicines.");
+      setError("Failed to fetch medicines. Please check your connection or try again later.");
       console.error("SearchClient: fetchMedicinesForSearch error:", e);
     } finally {
       setIsLoading(false);
@@ -191,7 +164,7 @@ export function SearchMedicineClient() {
 
   const handleBarcodeScan = () => {
     alert("Barcode scanning feature not implemented in this demo. You would integrate a library like QuaggaJS or use a native device API.");
-    setValue("query", "Scanned: Arnica Montana 30C"); 
+    setValue("query", "Scanned: Arnica Montana 30C");
   };
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -199,9 +172,65 @@ export function SearchMedicineClient() {
     setNameSuggestions([]);
     setShowNameSuggestions(false);
     console.log("SearchClient: Suggestion clicked:", suggestion);
-    setFocus('query'); 
+    setFocus('query');
   };
 
+  const renderResults = () => {
+    if (isLoading || isSubmitting) {
+      return (
+        <div className="text-center py-10">
+          <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
+          <p className="mt-2 text-muted-foreground">Searching medicines...</p>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <Card className="bg-destructive/10 border-destructive text-destructive-foreground shadow mt-8">
+          <CardHeader>
+            <CardTitle className="flex items-center"><AlertCircle className="mr-2 h-5 w-5" />Error</CardTitle>
+          </CardHeader>
+          <CardContent><p>{error}</p></CardContent>
+        </Card>
+      );
+    }
+
+    if (searchAttempted && searchResults.length === 0) {
+      return (
+        <Card className="shadow mt-8">
+          <CardHeader>
+            <CardTitle className="flex items-center"><Info className="mr-2 h-5 w-5 text-primary"/>No Results Found</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">
+              No medicines matched your search criteria. Try adjusting your query or filters.
+              Check your CSV file at <code>src/data/medicine_name.csv</code> for correct data and headers:
+              <code>"Medicine Name","Potecy/Power","Box Number","Total Number Of Medicine"</code>.
+              Also, review server console logs for detailed CSV parsing information.
+            </p>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    if (searchResults.length > 0) {
+      return (
+        <div className="mt-8">
+          <h2 className="text-2xl font-semibold font-headline mb-6">
+            Search Results ({searchResults.length})
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {searchResults.map((medicine) => (
+              <MedicineCard key={medicine.id} medicine={medicine} />
+            ))}
+          </div>
+        </div>
+      );
+    }
+    // Initially, or if a search is cleared to an empty state without submission, show nothing.
+    return null;
+  };
 
   return (
     <div className="space-y-8">
@@ -240,7 +269,7 @@ export function SearchMedicineClient() {
                 </Button>
               </div>
               {showNameSuggestions && nameSuggestions.length > 0 && (
-                <div 
+                <div
                   ref={suggestionsRef}
                   className="absolute z-10 w-full bg-background border border-input rounded-md mt-1 shadow-lg max-h-60 overflow-y-auto"
                 >
@@ -249,7 +278,7 @@ export function SearchMedicineClient() {
                       key={index}
                       className="p-2 hover:bg-accent hover:text-accent-foreground cursor-pointer text-sm"
                       onClick={() => handleSuggestionClick(suggestion)}
-                      onMouseDown={(e) => e.preventDefault()} 
+                      onMouseDown={(e) => e.preventDefault()}
                     >
                       {suggestion}
                     </div>
@@ -307,51 +336,9 @@ export function SearchMedicineClient() {
         </Card>
       )}
 
-      {error && (
-        <Card className="bg-destructive/10 border-destructive text-destructive-foreground shadow">
-          <CardHeader>
-            <CardTitle className="flex items-center"><AlertCircle className="mr-2 h-5 w-5" />Error</CardTitle>
-          </CardHeader>
-          <CardContent><p>{error}</p></CardContent>
-        </Card>
-      )}
-      
-      {isLoading && !initialLoadDone && (
-         <div className="text-center py-10">
-            <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
-            <p className="mt-2 text-muted-foreground">Loading medicines...</p>
-          </div>
-      )}
+      {/* Render results, spinner, error, or no results message */}
+      {renderResults()}
 
-      {initialLoadDone && !isLoading && !isSubmitting && searchResults.length === 0 && (currentQuery || currentPotency !== "Any") && (
-        <Card className="shadow">
-          <CardHeader>
-            <CardTitle className="flex items-center"><Info className="mr-2 h-5 w-5 text-primary"/>No Results Found</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              No medicines matched your search criteria. Try adjusting your query or filters.
-              Check your CSV file at <code>src/data/medicine_name.csv</code> for correct data and headers:
-              <code>"Medicine Name","Potecy/Power","Box Number","Total Number Of Medicine"</code>.
-              Also, review server console logs for detailed CSV parsing information.
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      {searchResults.length > 0 && (
-        <div>
-          <h2 className="text-2xl font-semibold font-headline mb-6">
-            Search Results ({searchResults.length})
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {searchResults.map((medicine) => (
-              <MedicineCard key={medicine.id} medicine={medicine} />
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
-
