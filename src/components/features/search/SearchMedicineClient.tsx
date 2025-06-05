@@ -17,8 +17,8 @@ import { MedicineCard } from "./MedicineCard";
 import { MedicineCardSkeleton } from "./MedicineCardSkeleton";
 import type { Medicine } from "@/types";
 import { POTENCIES } from "@/types";
-import { handleParseHomeopathicQuery, fetchMedicinesForSearch, handleGetUniqueMedicineNames } from "@/lib/actions";
-import { Loader2, SearchIcon, AlertCircle, Wand2, Info, ChevronDown } from "lucide-react"; 
+import { handleParseHomeopathicQuery, fetchMedicinesForSearch, handleGetUniqueMedicineNames, fetchMedicineIndicationsFromCSVAction } from "@/lib/actions"; // Added fetchMedicineIndicationsFromCSVAction
+import { Loader2, SearchIcon, AlertCircle, Wand2, Info, ChevronDown, HelpCircle } from "lucide-react"; 
 import type { ParseHomeopathicQueryOutput } from "@/ai/flows/parse-homeopathic-query";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -34,8 +34,10 @@ export function SearchMedicineClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [aiParsedInfo, setAiParsedInfo] = useState<ParseHomeopathicQueryOutput | null>(null); // State kept for logic
+  const [aiParsedInfo, setAiParsedInfo] = useState<ParseHomeopathicQueryOutput | null>(null);
   const [searchAttempted, setSearchAttempted] = useState(false);
+  const [currentMedicineIndications, setCurrentMedicineIndications] = useState<string | null>(null); // New state for indications
+  const [primarySearchedMedicineName, setPrimarySearchedMedicineName] = useState<string | null>(null); // New state for primary searched name
 
   const [allMedicineBaseNames, setAllMedicineBaseNames] = useState<string[]>([]);
   const [nameSuggestions, setNameSuggestions] = useState<string[]>([]);
@@ -95,10 +97,12 @@ export function SearchMedicineClient() {
   const onSubmit = async (data: SearchFormData) => {
     setIsLoading(true);
     setError(null);
-    setAiParsedInfo(null); // Reset AI info
+    setAiParsedInfo(null);
     setShowNameSuggestions(false);
     setSearchAttempted(true);
     setSearchResults([]);
+    setCurrentMedicineIndications(null); // Reset indications
+    setPrimarySearchedMedicineName(null); // Reset primary name
 
     let searchName = data.query.trim();
     let searchPotency = data.potency;
@@ -108,6 +112,8 @@ export function SearchMedicineClient() {
       setSearchResults([]); 
       return;
     }
+    
+    let nameForIndicationsLookup = searchName; // Default to user's query
 
     if (searchName !== "") {
         try {
@@ -115,8 +121,11 @@ export function SearchMedicineClient() {
             if ('error' in aiResult) {
                 console.warn("SearchClient: AI parsing failed, proceeding with form data. Error:", aiResult.error);
             } else {
-                setAiParsedInfo(aiResult); // Still set for internal use if needed, but not displayed
-                if (aiResult.medicineName) searchName = aiResult.medicineName.trim();
+                setAiParsedInfo(aiResult);
+                if (aiResult.medicineName && aiResult.medicineName.trim().toLowerCase() !== "any potency") {
+                  searchName = aiResult.medicineName.trim();
+                  nameForIndicationsLookup = aiResult.medicineName.trim(); // Use AI parsed name for indications
+                }
                 if (aiResult.potency && aiResult.potency.toLowerCase() !== "any potency" && data.potency === "Any") {
                    let clientMatchedPotency: string | undefined = undefined;
                    const aiPotencyRaw = aiResult.potency.toLowerCase();
@@ -143,6 +152,18 @@ export function SearchMedicineClient() {
     try {
       const medicines = await fetchMedicinesForSearch(finalSearchName, finalSearchPotency);
       setSearchResults(medicines);
+
+      if (medicines.length > 0) {
+        // If AI didn't provide a clean name, use the name from the first result for indications
+        if (!nameForIndicationsLookup || nameForIndicationsLookup.toLowerCase() === "any potency") {
+            nameForIndicationsLookup = medicines[0].name;
+        }
+        setPrimarySearchedMedicineName(nameForIndicationsLookup); // Store the name used for lookup
+
+        const indications = await fetchMedicineIndicationsFromCSVAction(nameForIndicationsLookup);
+        setCurrentMedicineIndications(indications || null);
+      }
+
     } catch (e) {
       setError("Failed to fetch medicines. Please check your connection or try again later.");
       console.error("SearchClient: fetchMedicinesForSearch error:", e);
@@ -195,6 +216,10 @@ export function SearchMedicineClient() {
         </div>
       );
     }
+
+    // This part will render after the cards if there are results and indications
+    // The actual rendering of indications will be done outside this function, after the grid.
+    // This function just handles the medicine cards grid.
 
     if (searchResults.length > 0) {
       return (
@@ -328,14 +353,26 @@ export function SearchMedicineClient() {
           </form>
         </div>
 
-        {/* AI Query Interpretation box removed from here */}
-
         <div role="region" aria-live="polite" aria-atomic="true">
             {renderResults()}
         </div>
+
+        {/* Section to display medicine indications */}
+        {currentMedicineIndications && searchResults.length > 0 && primarySearchedMedicineName && (
+          <div className="mt-8 rounded-lg bg-gray-50 p-6 dark:bg-gray-800/50 shadow-md border-l-4 border-teal-500">
+            <div className="flex items-center mb-3">
+                <HelpCircle className="h-6 w-6 text-teal-600 dark:text-teal-300 mr-3" />
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+                Common Uses for {primarySearchedMedicineName}:
+                </h3>
+            </div>
+            <p className="text-base text-gray-700 dark:text-gray-300 leading-relaxed">
+              {currentMedicineIndications}
+            </p>
+          </div>
+        )}
         
       </div> 
     </div>
   );
 }
-

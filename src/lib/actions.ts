@@ -12,6 +12,7 @@ import {
   searchMedicinesByNameAndPotency as dbSearchMedicines,
   getMedicineById as dbGetMedicineById,
   getUniqueMedicineNames as dbGetUniqueMedicineNames,
+  getIndicationsByMedicineName as dbGetIndications, // New import
 } from '@/lib/data';
 import type { Medicine } from '@/types';
 import { medicineSchema } from '@/types'; // medicineSchema is now simplified
@@ -152,4 +153,16 @@ export async function fetchMedicineById(id: string): Promise<Medicine | undefine
 
 export async function handleGetUniqueMedicineNames(): Promise<string[]> {
   return dbGetUniqueMedicineNames();
+}
+
+// New action to fetch indications from CSV
+export async function fetchMedicineIndicationsFromCSVAction(medicineName: string): Promise<string | undefined> {
+  try {
+    const indications = await dbGetIndications(medicineName);
+    return indications;
+  } catch (error) {
+    console.error(`ACTIONS: Error fetching indications for "${medicineName}" from CSV:`, error);
+    // Depending on desired behavior, could return undefined or throw an error
+    return undefined; 
+  }
 }
