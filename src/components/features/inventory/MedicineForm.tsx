@@ -3,8 +3,7 @@
 
 import type { Medicine, Potency, Preparation } from "@/types";
 import { POTENCIES, PREPARATIONS, medicineSchema } from "@/types";
-import { useActionState } from "react";
-import { useEffect } from "react";
+import { useActionState, useEffect, useTransition } from "react"; // Added useTransition
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,13 +40,14 @@ export function MedicineForm({ action, initialData, formType }: MedicineFormProp
   const router = useRouter();
   const { toast } = useToast();
 
-  const [state, formAction] = useActionState(action, null);
+  const [state, formAction, isActionPending] = useActionState(action, null); // isActionPending from useActionState
+  const [, startTransition] = useTransition(); // We only need startTransition here
 
   const {
     register,
     handleSubmit,
     control,
-    formState: { errors, isSubmitting },
+    formState: { errors }, // Removed isSubmitting from RHF, will use isActionPending
     reset,
   } = useForm<MedicineFormData>({
     resolver: zodResolver(medicineSchema),
@@ -93,14 +93,17 @@ export function MedicineForm({ action, initialData, formType }: MedicineFormProp
             : `Editing medicine: ${initialData?.name || ""}`}
         </CardDescription>
       </CardHeader>
-      <form action={formAction} onSubmit={handleSubmit((data) => {
+      {/* Removed 'action' prop from form. onSubmit now handles calling formAction within a transition. */}
+      <form onSubmit={handleSubmit((data) => {
         const formData = new FormData();
         Object.entries(data).forEach(([key, value]) => {
           if (value !== undefined && value !== null) {
             formData.append(key, String(value));
           }
         });
-        formAction(formData);
+        startTransition(() => { // Wrap the call to formAction in startTransition
+          formAction(formData);
+        });
       })}>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -184,8 +187,9 @@ export function MedicineForm({ action, initialData, formType }: MedicineFormProp
 
         </CardContent>
         <CardFooter className="flex justify-end">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <SaveIcon className="mr-2 h-4 w-4" />}
+          {/* Use isActionPending from useActionState for the button's disabled state */}
+          <Button type="submit" disabled={isActionPending}>
+            {isActionPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <SaveIcon className="mr-2 h-4 w-4" />}
             {formType === "add" ? "Add Medicine" : "Save Changes"}
           </Button>
         </CardFooter>
