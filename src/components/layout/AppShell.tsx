@@ -17,6 +17,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
+      {/* Mobile Header - Section 1.1 (New Addition) */}
+      <header className="sticky top-0 z-40 flex h-12 items-center justify-center border-b border-gray-200 bg-white/80 shadow-sm backdrop-blur-sm dark:border-gray-700 dark:bg-gray-900/80 md:hidden">
+        <Link href="/" className="flex items-center space-x-2" aria-label="HomeoWise Home">
+          <Leaf className="h-5 w-5 text-primary-500 dark:text-primary-300" />
+          <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">HomeoWise</span>
+        </Link>
+      </header>
+
       {/* Desktop Header - Section 1.2 */}
       <header className="sticky top-0 z-50 hidden h-16 w-full border-b border-gray-200 bg-white/80 shadow-sm backdrop-blur-sm dark:border-gray-700 dark:bg-gray-900/80 md:flex">
         <div className="container mx-auto flex h-full items-center px-8">
@@ -32,9 +40,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 asChild
                 className={cn(
                   "nav-link-desktop h-10 px-4 text-base font-medium text-gray-800 hover:text-teal-600 dark:text-gray-100 dark:hover:text-teal-300",
-                  pathname === link.href && "active text-primary-500 dark:text-primary-300" // 'active' class for CSS rule
+                  pathname === link.href && "active text-primary-500 dark:text-primary-300"
                 )}
-                data-active={pathname === link.href} // data-active for CSS rule if needed
+                data-active={pathname === link.href}
               >
                 <Link href={link.href}>
                   <link.icon className="mr-2 h-5 w-5" />
@@ -45,8 +53,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </nav>
           <Button
             asChild
-            // Styling from Section 1.2 for "Add Medicine" button (Desktop)
-            className="h-11 min-h-[44px] rounded-full bg-teal-500 px-4 py-2 text-base font-medium text-white shadow-md hover:bg-teal-600 active:scale-95 dark:bg-teal-400 dark:text-gray-900 dark:hover:bg-teal-500 transition-transform duration-150"
+            className="btn-primary h-11 min-h-[44px] !rounded-full px-4 py-2 text-base"
           >
             <Link href="/inventory/add">
               <PlusCircle className="mr-2 h-5 w-5" />
@@ -58,10 +65,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Main Content Area */}
       <main id="main-content" className="flex-1">
-        {/* Padding applied by child pages based on spec */}
-        {/* pb-14 for mobile bottom nav (h-14), md:pb-0 to remove it on larger screens */}
-        <div className="pb-14 md:pb-0"> 
-            {children}
+        {/* Adjusted top padding for mobile header */}
+        <div className="pt-0 md:pt-0"> {/* Mobile header is sticky, content will flow under it. Desktop has its own sticky header. */}
+             {/* Child pages apply their own top padding e.g. px-4 pt-6 ... */}
+            <div className="pb-14 md:pb-0">{/* This padding is for the fixed bottom mobile nav */}
+                 {children}
+            </div>
         </div>
       </main>
 
@@ -69,21 +78,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <nav className="fixed bottom-0 left-0 right-0 z-50 flex h-14 items-center justify-around border-t border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-900 md:hidden">
         <Link href="/" passHref legacyBehavior>
           <a className={cn(
-            "flex flex-1 flex-col items-center justify-center text-xs",
-            pathname === '/' ? "text-teal-500 dark:text-teal-300" : "text-gray-700 dark:text-gray-300"
+            "flex flex-1 flex-col items-center justify-center py-1 text-xs",
+            pathname === '/' ? "text-teal-500 dark:text-teal-300" : "text-gray-700 dark:text-gray-300 hover:text-teal-500 dark:hover:text-teal-300"
           )}>
             <Search className="h-6 w-6" />
             <span>Search</span>
           </a>
         </Link>
         
-        {/* Floating Action Button for Add - Section 1.1 */}
-        {/* Relative positioning for the container, absolute for the button itself */}
-        <div className="relative flex flex-1 items-center justify-center"> {/* flex-1 to take up space */}
+        <div className="relative flex flex-shrink-0 items-center justify-center px-4"> {/* Adjusted for better centering of FAB */}
           <Link href="/inventory/add" passHref legacyBehavior>
             <a 
-              aria-label="Add Medicine" // UX Writing Guideline 15.1
-              className="absolute -top-7 flex h-14 w-14 items-center justify-center rounded-full bg-teal-500 text-white shadow-lg transition-transform duration-150 hover:bg-teal-600 active:scale-95 dark:bg-teal-400 dark:text-gray-900 dark:hover:bg-teal-500"
+              aria-label="Add Medicine"
+              className="absolute bottom-3 flex h-14 w-14 items-center justify-center rounded-full bg-teal-500 text-white shadow-lg transition-transform duration-150 hover:bg-teal-600 active:scale-95 dark:bg-teal-400 dark:text-gray-900 dark:hover:bg-teal-500"
+              style={{ transform: 'translateY(-50%)' }} // Helps to visually float it more
             >
               <PlusCircle className="h-7 w-7" />
             </a>
@@ -92,8 +100,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         <Link href="/inventory" passHref legacyBehavior>
           <a className={cn(
-            "flex flex-1 flex-col items-center justify-center text-xs",
-            pathname.startsWith('/inventory') ? "text-teal-500 dark:text-teal-300" : "text-gray-700 dark:text-gray-300"
+            "flex flex-1 flex-col items-center justify-center py-1 text-xs",
+            (pathname === '/inventory' || pathname.startsWith('/inventory/')) ? "text-teal-500 dark:text-teal-300" : "text-gray-700 dark:text-gray-300 hover:text-teal-500 dark:hover:text-teal-300"
           )}>
             <Package className="h-6 w-6" />
             <span>Inventory</span>
@@ -101,9 +109,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </Link>
       </nav>
 
-      {/* Desktop Footer - Section 1.3 */}
-      <footer className="hidden border-t border-gray-200 bg-white py-4 dark:border-gray-700 dark:bg-gray-900 md:block">
-        <div className="container mx-auto flex flex-col items-center justify-center text-center">
+      {/* Footer - Now visible on all screen sizes */}
+      <footer className="border-t border-gray-200 bg-white py-4 dark:border-gray-700 dark:bg-gray-900">
+        <div className="container mx-auto flex flex-col items-center justify-center px-4 text-center">
           <p className="text-xs text-gray-600 dark:text-gray-400">
             © {new Date().getFullYear()} HomeoWise. Advanced Homeopathic Inventory.
           </p>
