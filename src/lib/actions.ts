@@ -2,7 +2,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
+// redirect removed as it's not used directly in these actions after form state handling
+// import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import {
   addMedicine as dbAddMedicine,
@@ -10,19 +11,26 @@ import {
   deleteMedicine as dbDeleteMedicine,
   searchMedicinesByNameAndPotency as dbSearchMedicines,
   getMedicineById as dbGetMedicineById,
-  getUniqueMedicineNames as dbGetUniqueMedicineNames, // Import new data function
+  getUniqueMedicineNames as dbGetUniqueMedicineNames,
 } from '@/lib/data';
 import type { Medicine } from '@/types';
-import { medicineSchema } from '@/types';
+import { medicineSchema } from '@/types'; // medicineSchema is now simplified
 import { parseHomeopathicQuery as aiParseQuery } from '@/ai/flows/parse-homeopathic-query';
 import type { ParseHomeopathicQueryInput, ParseHomeopathicQueryOutput } from '@/ai/flows/parse-homeopathic-query';
 
 
 export type MedicineFormState = {
   message: string;
+  // Adjusted errors to reflect removed fields from medicineSchema
   errors?: {
-    [K in keyof Omit<Medicine, 'id' | 'alternateNames'> & { alternateNames?: string[] }]?: string[];
-  } & { server?: string };
+    name?: string[];
+    potency?: string[];
+    preparation?: string[];
+    location?: string[];
+    quantity?: string[];
+    supplier?: string[];
+    server?: string;
+  };
   success: boolean;
 } | null;
 
@@ -32,6 +40,7 @@ export async function addMedicineAction(
   formData: FormData
 ): Promise<MedicineFormState> {
   const rawFormData = Object.fromEntries(formData.entries());
+  // medicineSchema is now simplified (no batchNumber, expirationDate, alternateNames)
   const validatedFields = await medicineSchema.safeParseAsync(rawFormData);
 
   if (!validatedFields.success) {
@@ -43,16 +52,14 @@ export async function addMedicineAction(
   }
 
   try {
+    // Construct medicineToAdd based on the new simplified Medicine type
     const medicineToAdd: Omit<Medicine, 'id'> = {
       name: validatedFields.data.name,
       potency: validatedFields.data.potency,
       preparation: validatedFields.data.preparation,
-      batchNumber: validatedFields.data.batchNumber,
-      expirationDate: validatedFields.data.expirationDate,
-      location: validatedFields.data.location,
+      location: validatedFields.data.location, // This is Box Number
       quantity: validatedFields.data.quantity,
       supplier: validatedFields.data.supplier,
-      alternateNames: validatedFields.data.alternateNames,
     };
     await dbAddMedicine(medicineToAdd);
     revalidatePath('/inventory');
@@ -69,6 +76,7 @@ export async function updateMedicineAction(
   formData: FormData
 ): Promise<MedicineFormState> {
   const rawFormData = Object.fromEntries(formData.entries());
+  // medicineSchema is now simplified
   const validatedFields = await medicineSchema.safeParseAsync(rawFormData);
 
   if (!validatedFields.success) {
@@ -80,16 +88,14 @@ export async function updateMedicineAction(
   }
   
   try {
+    // Construct medicineToUpdate based on the new simplified Medicine type
     const medicineToUpdate: Partial<Omit<Medicine, 'id'>> = {
       name: validatedFields.data.name,
       potency: validatedFields.data.potency,
       preparation: validatedFields.data.preparation,
-      batchNumber: validatedFields.data.batchNumber,
-      expirationDate: validatedFields.data.expirationDate,
-      location: validatedFields.data.location,
+      location: validatedFields.data.location, // This is Box Number
       quantity: validatedFields.data.quantity,
       supplier: validatedFields.data.supplier,
-      alternateNames: validatedFields.data.alternateNames,
     };
     const updated = await dbUpdateMedicine(id, medicineToUpdate);
     if (!updated) {
@@ -111,6 +117,8 @@ export async function deleteMedicineAction(id: string) {
     revalidatePath('/');
   } catch (e) {
     console.error("Failed to delete medicine:", e);
+    // Optionally, return an error state to be handled by the UI
+    // throw new Error("Failed to delete medicine.");
   }
 }
 

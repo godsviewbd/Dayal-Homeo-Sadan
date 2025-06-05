@@ -1,3 +1,4 @@
+
 import type { Medicine } from "@/types";
 import Link from "next/link";
 import {
@@ -11,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { QuantityBadge } from "@/components/shared/QuantityBadge";
-import { AlertTriangle, Edit3, Trash2, PackageOpen, CalendarDays, Layers } from "lucide-react";
+import { Edit3, PackageOpen, MapPinIcon } from "lucide-react"; // Removed CalendarDays, Layers, Trash2 (Delete uses its own button)
 import { DeleteMedicineButton } from "./DeleteMedicineButton";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
@@ -56,9 +57,9 @@ export function MedicineTable({ medicines }: MedicineTableProps) {
                 <TableHead>Potency</TableHead>
                 <TableHead className="hidden md:table-cell">Preparation</TableHead>
                 <TableHead className="text-right">Quantity</TableHead>
-                <TableHead className="hidden sm:table-cell">Batch No.</TableHead>
-                <TableHead className="hidden lg:table-cell">Expires</TableHead>
-                <TableHead className="hidden md:table-cell">Location</TableHead>
+                {/* <TableHead className="hidden sm:table-cell">Batch No.</TableHead> // Removed */}
+                {/* <TableHead className="hidden lg:table-cell">Expires</TableHead> // Removed */}
+                <TableHead className="hidden md:table-cell">Location (Box No.)</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -73,16 +74,14 @@ export function MedicineTable({ medicines }: MedicineTableProps) {
                   <TableCell className="text-right">
                     <QuantityBadge quantity={med.quantity} />
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell">
-                    <Badge variant="secondary">{med.batchNumber}</Badge>
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell">
+                  {/* Batch Number cell removed */}
+                  {/* Expiration Date cell removed */}
+                  <TableCell className="hidden md:table-cell">
                     <div className="flex items-center">
-                      <CalendarDays className="mr-1.5 h-4 w-4 text-muted-foreground" />
-                      {new Date(med.expirationDate).toLocaleDateString()}
+                      <MapPinIcon className="mr-1.5 h-4 w-4 text-muted-foreground" />
+                       {med.location}
                     </div>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">{med.location}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end space-x-2">
                       <Button variant="outline" size="icon" asChild title={`Edit ${med.name}`}>

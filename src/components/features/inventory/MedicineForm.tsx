@@ -2,17 +2,17 @@
 "use client";
 
 import type { Medicine, Potency, Preparation } from "@/types";
-import { POTENCIES, PREPARATIONS, medicineSchema } from "@/types"; // Import medicineSchema from @/types
-import { useActionState } from "react"; // Changed from react-dom
+import { POTENCIES, PREPARATIONS, medicineSchema } from "@/types";
+import { useActionState } from "react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { MedicineFormState } from "@/lib/actions"; // Keep type import from actions
+import type { MedicineFormState } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+// Textarea removed as Alternate Names is removed
 import {
   Select,
   SelectContent,
@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { CalendarIcon, SaveIcon, Loader2 } from "lucide-react";
+import { SaveIcon, Loader2 } from "lucide-react"; // CalendarIcon removed
 
 interface MedicineFormProps {
   action: (
@@ -33,14 +33,15 @@ interface MedicineFormProps {
   formType: "add" | "edit";
 }
 
-type MedicineFormData = Omit<Medicine, 'id' | 'alternateNames'> & { alternateNames?: string };
+// FormData type adjusted to match new Medicine structure (no batchNumber, expirationDate, alternateNames)
+type MedicineFormData = Omit<Medicine, 'id'>;
 
 
 export function MedicineForm({ action, initialData, formType }: MedicineFormProps) {
   const router = useRouter();
   const { toast } = useToast();
 
-  const [state, formAction] = useActionState(action, null); // Changed from useFormState
+  const [state, formAction] = useActionState(action, null);
 
   const {
     register,
@@ -53,13 +54,13 @@ export function MedicineForm({ action, initialData, formType }: MedicineFormProp
     defaultValues: {
       name: initialData?.name || "",
       potency: initialData?.potency || "",
-      preparation: initialData?.preparation || "Pellets",
-      batchNumber: initialData?.batchNumber || "",
-      expirationDate: initialData?.expirationDate || "",
-      location: initialData?.location || "",
+      preparation: initialData?.preparation || "Liquid", // Default to Liquid
+      // batchNumber: initialData?.batchNumber || "", // Removed
+      // expirationDate: initialData?.expirationDate || "", // Removed
+      location: initialData?.location || "", // This is Box Number
       quantity: initialData?.quantity || 0,
       supplier: initialData?.supplier || "",
-      alternateNames: initialData?.alternateNames?.join(", ") || "",
+      // alternateNames: initialData?.alternateNames?.join(", ") || "", // Removed
     },
   });
   
@@ -154,24 +155,6 @@ export function MedicineForm({ action, initialData, formType }: MedicineFormProp
               {errors.preparation && <p className="text-sm text-destructive mt-1">{errors.preparation.message}</p>}
               {(state?.errors?.preparation && !errors.preparation) && <p className="text-sm text-destructive mt-1">{state.errors.preparation[0]}</p>}
             </div>
-             <div>
-              <Label htmlFor="batchNumber">Batch Number</Label>
-              <Input id="batchNumber" {...register("batchNumber")} placeholder="e.g., BN12345" />
-              {errors.batchNumber && <p className="text-sm text-destructive mt-1">{errors.batchNumber.message}</p>}
-              {(state?.errors?.batchNumber && !errors.batchNumber) && <p className="text-sm text-destructive mt-1">{state.errors.batchNumber[0]}</p>}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <Label htmlFor="expirationDate">Expiration Date</Label>
-              <div className="relative">
-                <Input id="expirationDate" type="date" {...register("expirationDate")} className="pr-10" />
-                <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              </div>
-              {errors.expirationDate && <p className="text-sm text-destructive mt-1">{errors.expirationDate.message}</p>}
-              {(state?.errors?.expirationDate && !errors.expirationDate) && <p className="text-sm text-destructive mt-1">{state.errors.expirationDate[0]}</p>}
-            </div>
             <div>
               <Label htmlFor="quantity">Quantity</Label>
               <Input id="quantity" type="number" {...register("quantity", { valueAsNumber: true })} placeholder="e.g., 100" />
@@ -179,10 +162,13 @@ export function MedicineForm({ action, initialData, formType }: MedicineFormProp
               {(state?.errors?.quantity && !errors.quantity) && <p className="text-sm text-destructive mt-1">{state.errors.quantity[0]}</p>}
             </div>
           </div>
+          
+          {/* Batch Number field removed */}
+          {/* Expiration Date field removed */}
 
           <div>
-            <Label htmlFor="location">Location</Label>
-            <Input id="location" {...register("location")} placeholder="e.g., Shelf A1, Drawer 3" />
+            <Label htmlFor="location">Location (Box Number)</Label>
+            <Input id="location" {...register("location")} placeholder="e.g., 28, A1, Drawer 3" />
             {errors.location && <p className="text-sm text-destructive mt-1">{errors.location.message}</p>}
             {(state?.errors?.location && !errors.location) && <p className="text-sm text-destructive mt-1">{state.errors.location[0]}</p>}
           </div>
@@ -193,11 +179,7 @@ export function MedicineForm({ action, initialData, formType }: MedicineFormProp
             {errors.supplier && <p className="text-sm text-destructive mt-1">{errors.supplier.message}</p>}
           </div>
 
-          <div>
-            <Label htmlFor="alternateNames">Alternate Names (Optional, comma-separated)</Label>
-            <Textarea id="alternateNames" {...register("alternateNames")} placeholder="e.g., Leopard's Bane, Monkshood" />
-            {errors.alternateNames && <p className="text-sm text-destructive mt-1">{errors.alternateNames.message}</p>}
-          </div>
+          {/* Alternate Names field removed */}
            {state?.errors?.server && <p className="text-sm text-destructive mt-1">{state.errors.server}</p>}
 
         </CardContent>
