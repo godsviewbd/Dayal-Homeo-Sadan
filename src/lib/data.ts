@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import Papa from 'papaparse';
 import type { Medicine, Preparation } from '@/types';
-import { PREPARATIONS } from '@/types'; // Import PREPARATIONS for validation
+import { PREPARATIONS, POTENCIES } from '@/types'; // Import PREPARATIONS and POTENCIES for validation/defaults
 
 // Define the path to your CSV file
 const CSV_FILE_PATH = path.join(process.cwd(), 'src', 'data', 'medicine_name.csv');
@@ -13,7 +13,8 @@ function loadMedicinesFromCSV(): Medicine[] {
     // Check if the CSV file exists, create a template if not
     if (!fs.existsSync(CSV_FILE_PATH)) {
       console.warn(`CSV file not found at ${CSV_FILE_PATH}. A template will be created. Please populate it with your data.`);
-      const headers = "id,name,potency,preparation,batchNumber,expirationDate,location,quantity,supplier,alternateNames\n";
+      // Updated headers for the new CSV structure
+      const headers = `"Medicine Name","Potency/Power","Box Number","Total Number Of Medicine"\n`;
       const dirPath = path.dirname(CSV_FILE_PATH);
       if (!fs.existsSync(dirPath)) {
         fs.mkdirSync(dirPath, { recursive: true });
@@ -33,10 +34,10 @@ function loadMedicinesFromCSV(): Medicine[] {
     if (parsed.errors.length > 0) {
       console.error('Error parsing CSV:', parsed.errors.map(e => e.message).join('\n'));
       console.warn(`There were errors parsing ${CSV_FILE_PATH}. Inventory might be incomplete. Please check the file format.`);
-      // Optionally, still try to process valid data if any
     }
     
-    const requiredHeaders = ['id', 'name', 'potency', 'preparation', 'batchNumber', 'expirationDate', 'location', 'quantity'];
+    // Updated required headers for the new CSV structure
+    const requiredHeaders = ['Medicine Name', 'Potency/Power', 'Box Number', 'Total Number Of Medicine'];
     const actualHeaders = parsed.meta.fields;
 
     if (!actualHeaders || !requiredHeaders.every(h => actualHeaders.includes(h))) {
@@ -48,40 +49,40 @@ function loadMedicinesFromCSV(): Medicine[] {
       console.info(`The CSV file at ${CSV_FILE_PATH} appears to contain only headers or is empty. Inventory will be empty. Populate the CSV with your medicine data.`);
     }
 
-
     return parsed.data.map((row, index) => {
-      const id = row.id?.trim();
-      const name = row.name?.trim();
+      const medicineName = row['Medicine Name']?.trim();
+      const potencyPower = row['Potency/Power']?.trim();
+      const boxNumber = row['Box Number']?.trim();
+      const totalNumberOfMedicineStr = row['Total Number Of Medicine']?.trim();
 
-      if (!id || !name) {
-        // Don't log for empty rows that PapaParse might pick up if there are trailing newlines
+      if (!medicineName || !potencyPower || !boxNumber || !totalNumberOfMedicineStr) {
         if (Object.values(row).some(val => val && val.trim() !== '')) {
-            console.warn(`Skipping row ${index + 2} in CSV due to missing 'id' or 'name'.`); // +2 for header and 0-based index
+            console.warn(`Skipping row ${index + 2} in CSV due to missing required data for 'Medicine Name', 'Potency/Power', 'Box Number', or 'Total Number Of Medicine'.`);
         }
         return null;
       }
 
-      const preparationValue = row.preparation?.trim() as Preparation;
-      const isValidPreparation = PREPARATIONS.includes(preparationValue);
-
-      const quantityStr = row.quantity?.trim();
-      const quantity = quantityStr ? parseInt(quantityStr, 10) : 0;
-      if (isNaN(quantity) && quantityStr !== undefined && quantityStr !== '') {
-         console.warn(`Invalid quantity '${quantityStr}' for medicine '${name}' (id: ${id}) in CSV row ${index + 2}. Defaulting to 0.`);
+      const quantity = parseInt(totalNumberOfMedicineStr, 10);
+      if (isNaN(quantity)) {
+         console.warn(`Invalid quantity '${totalNumberOfMedicineStr}' for medicine '${medicineName}' in CSV row ${index + 2}. Defaulting to 0.`);
       }
+      
+      // Generate a unique ID. Using a combination of fields for potential stability if re-parsing.
+      // Or a simpler Date.now() + index for guaranteed uniqueness per load.
+      const generatedId = `${medicineName}-${potencyPower}-${boxNumber}-${index}`;
 
 
       return {
-        id,
-        name,
-        potency: row.potency?.trim() || 'Unknown Potency',
-        preparation: isValidPreparation ? preparationValue : 'Other',
-        batchNumber: row.batchNumber?.trim() || 'N/A',
-        expirationDate: row.expirationDate?.trim() || 'N/A', // Should be YYYY-MM-DD
-        location: row.location?.trim() || 'N/A',
+        id: generatedId, // ID is generated
+        name: medicineName,
+        potency: potencyPower,
+        preparation: 'Pellets' as Preparation, // Default preparation
+        batchNumber: boxNumber, // Using "Box Number" as "batchNumber"
+        expirationDate: 'N/A', // Default expiration date
+        location: 'N/A', // Default location
         quantity: isNaN(quantity) ? 0 : quantity,
-        supplier: row.supplier?.trim() || undefined, // Optional
-        alternateNames: row.alternateNames?.trim() ? row.alternateNames.split(',').map(s => s.trim()).filter(s => s) : [], // Optional
+        supplier: undefined, // Default supplier
+        alternateNames: [], // Default alternate names
       };
     }).filter(Boolean) as Medicine[]; // filter(Boolean) removes any null entries from skipped rows
   } catch (error) {
@@ -90,20 +91,11 @@ function loadMedicinesFromCSV(): Medicine[] {
   }
 }
 
-// Initialize medicines array by loading data from CSV
-// This happens once when the server starts or the module is first imported.
 let medicines: Medicine[] = loadMedicinesFromCSV();
 
-// --- Existing Data Access Functions ---
-// These will now operate on the 'medicines' array loaded from the CSV.
-
 export async function getMedicines(): Promise<Medicine[]> {
-  // Simulate API delay if needed, or just return the loaded data
-  // await new Promise(resolve => setTimeout(resolve, 100));
-  // The 'medicines' array is already populated by loadMedicinesFromCSV()
-  if (medicines.length === 0) {
-     // Attempt to reload if empty, in case file was populated after server start (dev scenario)
-     // For production, this might not be desired if file is static post-deployment.
+  if (medicines.length === 0 && fs.existsSync(CSV_FILE_PATH)) {
+     // Attempt to reload if empty and CSV exists, in case file was populated after server start
      console.log("Inventory is empty, attempting to reload from CSV (this might happen if CSV was updated after server start).")
      medicines = loadMedicinesFromCSV();
   }
@@ -111,48 +103,41 @@ export async function getMedicines(): Promise<Medicine[]> {
 }
 
 export async function getMedicineById(id: string): Promise<Medicine | undefined> {
-  // await new Promise(resolve => setTimeout(resolve, 50));
   const medicine = medicines.find(m => m.id === id);
   return medicine ? JSON.parse(JSON.stringify(medicine)) : undefined;
 }
 
-// IMPORTANT NOTE: The following functions (add, update, delete) will modify
-// the IN-MEMORY 'medicines' array. They WILL NOT write changes back to the CSV file.
-// To make changes persistent across server restarts, you would need to:
-// 1. Implement logic to write the 'medicines' array back to the CSV file.
-// 2. Or, switch to a proper database solution.
-
 export async function addMedicine(medicineData: Omit<Medicine, 'id'>): Promise<Medicine> {
-  // await new Promise(resolve => setTimeout(resolve, 100));
-  // Create a more robust ID if the input doesn't guarantee uniqueness from other sources
+  // Ensure new IDs don't clash if we are generating them based on existing data.
+  // A more robust ID generation might be needed if CSV IDs could be manually added later.
   const newMedicine: Medicine = { ...medicineData, id: String(Date.now() + Math.random()) };
   medicines.push(newMedicine);
   console.log(`Added medicine '${newMedicine.name}' to in-memory inventory. This change is NOT saved to the CSV.`);
+  // Note: If you want addMedicine to persist, you'd need to write back to the CSV here.
   return JSON.parse(JSON.stringify(newMedicine));
 }
 
 export async function updateMedicine(id: string, updates: Partial<Omit<Medicine, 'id'>>): Promise<Medicine | null> {
-  // await new Promise(resolve => setTimeout(resolve, 100));
   const index = medicines.findIndex(m => m.id === id);
   if (index === -1) return null;
   medicines[index] = { ...medicines[index], ...updates };
   console.log(`Updated medicine ID '${id}' in in-memory inventory. This change is NOT saved to the CSV.`);
+  // Note: If you want updateMedicine to persist, you'd need to write back to the CSV here.
   return JSON.parse(JSON.stringify(medicines[index]));
 }
 
 export async function deleteMedicine(id: string): Promise<boolean> {
-  // await new Promise(resolve => setTimeout(resolve, 100));
   const initialLength = medicines.length;
   medicines = medicines.filter(m => m.id !== id);
   if (medicines.length < initialLength) {
     console.log(`Deleted medicine ID '${id}' from in-memory inventory. This change is NOT saved to the CSV.`);
+    // Note: If you want deleteMedicine to persist, you'd need to write back to the CSV here.
     return true;
   }
   return false;
 }
 
 export async function searchMedicinesByNameAndPotency(nameQuery?: string, potencyQuery?: string): Promise<Medicine[]> {
-  // await new Promise(resolve => setTimeout(resolve, 100));
   let results = [...medicines]; 
   
   if (nameQuery) {
@@ -165,7 +150,8 @@ export async function searchMedicinesByNameAndPotency(nameQuery?: string, potenc
 
   if (potencyQuery && potencyQuery !== 'Any') {
     const lowerPotencyQuery = potencyQuery.toLowerCase();
-    results = results.filter(m => m.potency.toLowerCase() === lowerPotencyQuery);
+    // Make potency search more flexible, e.g., exact match or contains
+    results = results.filter(m => m.potency.toLowerCase().includes(lowerPotencyQuery));
   }
   
   return JSON.parse(JSON.stringify(results));

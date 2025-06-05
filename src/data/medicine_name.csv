@@ -1,1 +1,3 @@
-id,name,potency,preparation,batchNumber,expirationDate,location,quantity,supplier,alternateNames
+"Medicine Name","Potency/Power","Box Number","Total Number Of Medicine"
+"Arnica Montana","30C","BOX001","50"
+"Belladonna","200X","BOX002","30"
