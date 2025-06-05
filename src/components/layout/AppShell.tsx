@@ -17,7 +17,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
-      {/* Mobile Header - Section 1.1 (New Addition) */}
+      {/* Mobile Header - Section 1.1 */}
       <header className="sticky top-0 z-40 flex h-12 items-center justify-center border-b border-gray-200 bg-white/80 shadow-sm backdrop-blur-sm dark:border-gray-700 dark:bg-gray-900/80 md:hidden">
         <Link href="/" className="flex items-center space-x-2" aria-label="HomeoWise Home">
           <Leaf className="h-5 w-5 text-primary-500 dark:text-primary-300" />
@@ -53,7 +53,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </nav>
           <Button
             asChild
-            className="btn-primary h-11 min-h-[44px] !rounded-full px-4 py-2 text-base"
+            className="btn-primary h-11 min-h-[44px] !rounded-full px-4 py-2 text-base" // Uses .btn-primary from globals
           >
             <Link href="/inventory/add">
               <PlusCircle className="mr-2 h-5 w-5" />
@@ -67,7 +67,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <main id="main-content" className="flex-1">
         {/* Main content wrapper: pt-0 for mobile to account for sticky mobile header, desktop handles its own. */}
         {/* pb-14 for mobile to clear fixed bottom nav, md:pb-0 for desktop. */}
-        <div className="pt-0 pb-14 md:pb-0">
+        <div className="pb-14 pt-0 md:pb-0"> {/* Adjusted mobile pt-0 if mobile header is present */}
              {children}
         </div>
       </main>
@@ -76,7 +76,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <nav className="fixed bottom-0 left-0 right-0 z-50 flex h-14 items-center justify-around border-t border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-900 md:hidden">
         <Link href="/" passHref legacyBehavior>
           <a className={cn(
-            "flex flex-1 flex-col items-center justify-center py-1 text-xs",
+            "flex flex-col items-center justify-center py-1 text-xs", // Removed flex-1
             pathname === '/' ? "text-teal-500 dark:text-teal-300" : "text-gray-700 dark:text-gray-300 hover:text-teal-500 dark:hover:text-teal-300"
           )}>
             <Search className="h-6 w-6" />
@@ -84,13 +84,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </a>
         </Link>
         
-        {/* Container for the FAB to ensure it's a flex item for justify-around */}
-        <div className="relative flex w-14 flex-shrink-0 items-center justify-center">
+        <div className="relative"> {/* Container for FAB, one of 3 items for justify-around */}
           <Link href="/inventory/add" passHref legacyBehavior>
             <a 
               aria-label="Add Medicine"
-              className="absolute bottom-3 flex h-14 w-14 items-center justify-center rounded-full bg-teal-500 text-white shadow-lg transition-transform duration-150 hover:bg-teal-600 active:scale-95 dark:bg-teal-400 dark:text-gray-900 dark:hover:bg-teal-500"
-              style={{ transform: 'translateY(-50%)' }} // Visually floats the button
+              className="absolute -top-8 left-1/2 flex h-14 w-14 -translate-x-1/2 transform items-center justify-center rounded-full bg-teal-500 text-white shadow-lg transition-transform duration-150 hover:bg-teal-600 active:scale-95 dark:bg-teal-400 dark:text-gray-900 dark:hover:bg-teal-500"
             >
               <PlusCircle className="h-7 w-7" />
             </a>
@@ -99,7 +97,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         <Link href="/inventory" passHref legacyBehavior>
           <a className={cn(
-            "flex flex-1 flex-col items-center justify-center py-1 text-xs",
+            "flex flex-col items-center justify-center py-1 text-xs", // Removed flex-1
             (pathname === '/inventory' || pathname.startsWith('/inventory/')) ? "text-teal-500 dark:text-teal-300" : "text-gray-700 dark:text-gray-300 hover:text-teal-500 dark:hover:text-teal-300"
           )}>
             <Package className="h-6 w-6" />
