@@ -1,3 +1,86 @@
-"Medicine Name","Potency/Power","Box Number","Total Number Of Medicine"
-"Arnica Montana","30C","BOX001","50"
-"Belladonna","200X","BOX002","30"
+Medicine Name,Potecy/Power,Box Number,Total Number Of Medicine
+arsenicum iodatum,200,9,8
+arsenicum iodatum,200,49,12
+Ledum palustre,10M,33,12
+Ledum palustre,10M,29,12
+Ledum palustre,10M,35,12
+Ledum palustre,200,2,11
+Ledum palustre	,1M,2,1
+Borax,200,28,12
+Borax,200,30,8
+Borax,200,104,11
+Borax,200,111,11
+Borax,30,30,1
+Borax,1M,30,1
+Sepia officinalis,200,74,11
+Sepia officinalis,200,61,10
+Sepia officinalis,1M,27,1
+Sepia officinalis,10M,27,1
+Sepia officinalis,50M,27,1
+Sepia officinalis,30,27,1
+Lachesis muta,10M,60,10
+Lachesis muta,1M,60,1
+Lachesis muta,30,60,1
+Hepar sulphuris calcareum,200,73,12
+Hepar sulphuris calcareum,200,108,12
+Hepar sulphuris calcareum,200,113,12
+Hepar sulphuris calcareum,200,105,2
+Hepar sulphuris calcareum,50M,105,1
+Hepar sulphuris calcareum,30,105,1
+Bryonia alba,200,36,12
+Bryonia alba,200,40,12
+Bryonia alba,200,43,1
+Bryonia alba,3x,43,3
+Bryonia alba,30,43,1
+Bryonia alba,50M,43,1
+Causticum,10M,34,5
+Causticum,1M,34,1
+Causticum,50M,34,1
+Sanguinaria nitricum,200,31,12
+Sanguinaria nitricum,200,38,10
+Sanguinaria canadensis,200,44,12
+Sanguinaria canadensis,200,32,7
+Sanguinaria canadensis,10M,32,1
+Sanguinaria canadensis,1M,32,4
+Ferrum metallicum,10M,26,12
+Kali bichromicum,10M,3,6
+Kali bichromicum,CM,3,1
+Kali bichromicum,50M,3,1
+Kali bichromicum,200,109,11
+Sulphur,50M,1,1
+Sulphur,10M,1,7
+Sulphur,30,1,2
+Spongia tosta,200,25,1
+Spongia tosta,CM,25,1
+Spongia tosta,50M,25,1
+Spongia tosta,10M,25,2
+Veratrum album,200,53,3
+Veratrum album,1M,53,1
+Veratrum album,50M,53,1
+Veratrum album,10M,53,1
+Veratrum album,30,53,1
+Colocynthis,200,57,11
+Colocynthis,50M,57,1
+Colocynthis,10M,6,9
+Colocynthis,10M,5,12
+Colocynthis,10M,71,12
+Mercurius solubilis,30,121,2
+Mercurius solubilis,10M,121,1
+Mercurius solubilis,CM,121,1
+Ruta graveolens,30,119,1
+Ruta graveolens,200,119,1
+Ruta graveolens,1M,119,1
+Ruta graveolens,50M,119,1
+Ruta graveolens,CM,119,1
+Medorrhinum,200,120,1
+Medorrhinum,30,120,1
+Rhus toxicodendron,200,72,12
+Rhus toxicodendron,200,67,12
+Rhus toxicodendron,200,56,3
+Rhus toxicodendron,3X,56,1
+Rhus toxicodendron,50M,56,2
+Rhus toxicodendron,30,56,1
+Rhus toxicodendron,10M,56,1
+Calcarea fluorica,10M,59,10
+Calcarea fluorica,200,59,1
+Calcarea fluorica,1M,59,1
