@@ -72,9 +72,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {/* Placeholder for a potential left icon, e.g., menu */}
         </div>
         <div className="flex justify-center">
-          <Link href="/" className="flex items-center space-x-2" aria-label="HomeoWise Home">
+          <Link href="/" className="flex items-center space-x-2" aria-label="দয়াল হোমিও সদন Home">
             <Leaf className="h-5 w-5 text-primary-500 dark:text-primary-300" />
-            <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">HomeoWise</span>
+            <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">দয়াল হোমিও সদন</span>
           </Link>
         </div>
         <div className="flex justify-end">
@@ -85,9 +85,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Desktop Header */}
       <header className="sticky top-0 z-50 hidden h-16 w-full border-b border-gray-200 bg-white/80 shadow-sm backdrop-blur-sm dark:border-gray-700 dark:bg-gray-900/80 md:flex">
         <div className="container mx-auto flex h-full items-center px-8">
-          <Link href="/" className="mr-8 flex items-center space-x-2" aria-label="HomeoWise Home">
+          <Link href="/" className="mr-8 flex items-center space-x-2" aria-label="দয়াল হোমিও সদন Home">
             <Leaf className="h-6 w-6 text-primary-500 dark:text-primary-300" />
-            <span className="text-2xl font-semibold text-gray-900 dark:text-gray-100">HomeoWise</span>
+            <span className="text-2xl font-semibold text-gray-900 dark:text-gray-100">দয়াল হোমিও সদন</span>
           </Link>
           <nav className="flex flex-1 items-center space-x-2">
             {navLinks.map((link) => {
@@ -167,14 +167,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </Link>
       </nav>
 
-      {/* Footer - Now visible on all screen sizes */}
-      <footer className="border-t border-gray-200 bg-white py-4 dark:border-gray-700 dark:bg-gray-900">
+      {/* Footer - Now visible on desktop screens only */}
+      <footer className="hidden border-t border-gray-200 bg-white py-4 dark:border-gray-700 dark:bg-gray-900 md:block">
         <div className="container mx-auto flex flex-col items-center justify-center px-4 text-center">
           <p className="text-xs text-gray-600 dark:text-gray-400">
-            © {new Date().getFullYear()} HomeoWise. Advanced Homeopathic Inventory.
+            © {new Date().getFullYear()} দয়াল হোমিও সদন. Advanced Homeopathic Inventory.
           </p>
            <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-            Crafted with AI by Firebase Studio.
+            Created by <a href="https://www.facebook.com/share/1ASLPZfn9V/" target="_blank" rel="noopener noreferrer" className="underline text-primary-500 hover:text-primary-600 dark:text-primary-300 dark:hover:text-primary-400">Sozib Sorkar</a>.
           </p>
         </div>
       </footer>

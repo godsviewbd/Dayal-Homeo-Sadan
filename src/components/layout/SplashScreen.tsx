@@ -10,7 +10,7 @@ export function SimpleSplashScreen({ onSkip }: SplashScreenProps) {
   return (
     <div
       role="status"
-      aria-label="HomeoWise is starting, please wait"
+      aria-label="দয়াল হোমিও সদন is starting, please wait"
       className={cn(
         "fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden", // Added overflow-hidden
         "bg-gradient-to-b from-[#E5F2F0] to-[#F9FAFB]",
@@ -46,7 +46,7 @@ export function SimpleSplashScreen({ onSkip }: SplashScreenProps) {
             "motion-safe:animate-textEmerge opacity-0 motion-safe:[animation-delay:0.5s]" // Staggered animation
           )}
         >
-          HomeoWise
+          দয়াল হোমিও সদন
         </h1>
         <p
           className={cn(

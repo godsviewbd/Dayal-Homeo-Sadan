@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 import { AppInitializer } from '@/components/layout/AppInitializer'; // New import
 
 export const metadata: Metadata = { // This can now stay
-  title: 'HomeoWise - Homeopathic Inventory Management',
+  title: 'দয়াল হোমিও সদন - Homeopathic Inventory Management',
   description: 'Efficiently manage your homeopathic medicine inventory with AI-powered insights.',
 };
 
