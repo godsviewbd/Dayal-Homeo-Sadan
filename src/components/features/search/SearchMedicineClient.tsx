@@ -351,7 +351,18 @@ export function SearchMedicineClient() {
         <div role="region" aria-live="polite" aria-atomic="true">
             {renderResults()}
         </div>
-      </div>
+        
+        {/* Mobile-only attribution footer */}
+        <div className="mt-12 pt-6 border-t border-gray-200 dark:border-gray-700 text-center md:hidden">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            © {new Date().getFullYear()} দয়াল হোমিও সদন.
+          </p>
+          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+            Created by <a href="https://www.facebook.com/share/1ASLPZfn9V/" target="_blank" rel="noopener noreferrer" className="underline text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300">Sozib Sorkar</a>.
+          </p>
+        </div>
+
+      </div> {/* End of <div className="mx-auto w-full max-w-md ..."> */}
 
       {/* Removed Barcode Scanner Sheet and Overlay */}
     </div>
