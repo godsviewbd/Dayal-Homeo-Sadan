@@ -13,8 +13,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<string | null>(null);
 
   useEffect(() => {
-    // Moved theme initialization to a separate effect to avoid re-running on every theme change
-    // This effect runs once on mount to set the initial theme
     const storedTheme = localStorage.getItem('theme');
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     
@@ -22,8 +20,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       setTheme(storedTheme);
       document.documentElement.classList.toggle('dark', storedTheme === 'dark');
     } else {
-      // Default to light theme if no preference or system preference is found
-      // Or use systemPrefersDark to set initial theme based on OS
       const initialTheme = systemPrefersDark ? 'dark' : 'light';
       setTheme(initialTheme);
       document.documentElement.classList.toggle('dark', initialTheme === 'dark');
@@ -47,7 +43,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   ];
 
   if (theme === null) {
-    // Basic loading state to prevent flash of unstyled content if theme is not yet determined
     return <div className="flex min-h-screen flex-col bg-background text-foreground items-center justify-center">Loading theme...</div>;
   }
 
@@ -114,7 +109,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <ThemeToggleButton className="mr-2 h-10 w-10" />
           <Button
             asChild
-            variant="default" 
+            variant="default"
             className="h-11 min-h-[44px] px-4 py-2" 
           >
             <Link href="/inventory/add">
@@ -127,9 +122,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Main Content Area */}
       <main id="main-content" className="flex-1">
-        {/* Adjusted padding for mobile header */}
+        {/* Adjusted padding for mobile header & bottom nav */}
         <div className="pb-14 pt-0 md:pb-0 md:pt-0"> 
              {children}
+        </div>
+        {/* Mobile-only attribution footer within main scrollable area */}
+        <div className="px-4 pb-2 pt-4 text-center md:hidden">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            © {new Date().getFullYear()} দয়াল হোমিও সদন.
+          </p>
+          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+            Created by <a href="https://www.facebook.com/share/1ASLPZfn9V/" target="_blank" rel="noopener noreferrer" className="underline text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300">Sozib Sorkar</a>.
+          </p>
         </div>
       </main>
 

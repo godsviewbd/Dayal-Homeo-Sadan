@@ -18,7 +18,7 @@ import { MedicineCardSkeleton } from "./MedicineCardSkeleton";
 import type { Medicine } from "@/types";
 import { POTENCIES } from "@/types";
 import { handleParseHomeopathicQuery, fetchMedicinesForSearch, handleGetUniqueMedicineNames } from "@/lib/actions";
-import { Loader2, SearchIcon, AlertCircle, Wand2, Info, ChevronDown } from "lucide-react"; // Removed Barcode
+import { Loader2, SearchIcon, AlertCircle, Wand2, Info, ChevronDown } from "lucide-react"; 
 import type { ParseHomeopathicQueryOutput } from "@/ai/flows/parse-homeopathic-query";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -41,7 +41,6 @@ export function SearchMedicineClient() {
   const [nameSuggestions, setNameSuggestions] = useState<string[]>([]);
   const [showNameSuggestions, setShowNameSuggestions] = useState(false);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  // const [showBarcodeScannerSheet, setShowBarcodeScannerSheet] = useState(false); // Removed
   const { toast } = useToast();
 
 
@@ -104,12 +103,9 @@ export function SearchMedicineClient() {
     let searchName = data.query.trim();
     let searchPotency = data.potency;
 
-    // Client-side check for empty search
     if (searchName === "" && (searchPotency === "Any" || searchPotency === "")) {
       setIsLoading(false);
-      setSearchResults([]); // Keep results empty
-      // Optionally, set a specific error message or clear searchAttempted to show initial message
-      // setError("Please enter a medicine name or select a potency to search.");
+      setSearchResults([]); 
       return;
     }
 
@@ -155,7 +151,6 @@ export function SearchMedicineClient() {
     }
   };
 
-  // Removed handleBarcodeScan function
 
   const handleSuggestionClick = (suggestion: string) => {
     setValue("query", suggestion);
@@ -254,15 +249,14 @@ export function SearchMedicineClient() {
                     type="text"
                     placeholder="e.g., Arnica Montana 30C"
                     {...field}
-                    className="input-base" // Removed pr-12
+                    className="input-base" 
                     onFocus={() => currentQuery && nameSuggestions.length > 0 && setShowNameSuggestions(true)}
                     autoComplete="off"
                     aria-label="Search medicine by name"
                   />
                 )}
               />
-              {/* Removed Barcode Scan Button */}
-
+              
               {isLoadingSuggestions && (
                 <div className="mt-2 space-y-1 h-[48px] flex flex-col justify-around">
                   <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse w-full max-w-xs"></div>
@@ -281,7 +275,7 @@ export function SearchMedicineClient() {
                       key={index}
                       className="cursor-pointer px-4 py-2 text-gray-800 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-600"
                       onClick={() => handleSuggestionClick(suggestion)}
-                      onMouseDown={(e) => e.preventDefault()} // Keep focus on input
+                      onMouseDown={(e) => e.preventDefault()} 
                       role="option"
                       aria-selected={false}
                     >
@@ -352,20 +346,7 @@ export function SearchMedicineClient() {
             {renderResults()}
         </div>
         
-        {/* Mobile-only attribution footer */}
-        <div className="mt-12 pt-6 border-t border-gray-200 dark:border-gray-700 text-center md:hidden">
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            © {new Date().getFullYear()} দয়াল হোমিও সদন.
-          </p>
-          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
-            Created by <a href="https://www.facebook.com/share/1ASLPZfn9V/" target="_blank" rel="noopener noreferrer" className="underline text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300">Sozib Sorkar</a>.
-          </p>
-        </div>
-
-      </div> {/* End of <div className="mx-auto w-full max-w-md ..."> */}
-
-      {/* Removed Barcode Scanner Sheet and Overlay */}
+      </div> 
     </div>
   );
 }
-
