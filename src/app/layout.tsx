@@ -25,7 +25,7 @@ export default function RootLayout({
       <body className="font-sans antialiased bg-background text-foreground">
          <a href="#main-content" className="skip-link">Skip to content</a>
 
-        {/* AppInitializer is now imported directly. It's a Client Component. */}
+        {/* AppInitializer is imported directly. It's a Client Component. */}
         <AppInitializer>
           <AppShell>{children}</AppShell>
         </AppInitializer>
