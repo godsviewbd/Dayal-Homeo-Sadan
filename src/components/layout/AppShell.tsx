@@ -4,7 +4,7 @@ import type React from 'react';
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Leaf, Search, Package, PlusCircle, Sun, Moon, Menu, Facebook, Mail, Smartphone } from 'lucide-react'; // Added Menu & contact icons
+import { Leaf, Search, Package, PlusCircle, Sun, Moon, Menu, Facebook, Mail, Smartphone, Sparkles } from 'lucide-react'; // Added Sparkles
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -148,7 +148,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
         <div className="flex justify-center">
           <Link href="/" className="flex items-center space-x-2" aria-label="দয়াল হোমিও সদন Home">
-            <Leaf className="h-5 w-5 text-primary-500 dark:text-primary-300" />
+            <Sparkles className="h-5 w-5 text-primary-500 dark:text-primary-300" /> {/* Changed from Leaf */}
             <span className="whitespace-nowrap text-base font-semibold text-gray-900 dark:text-gray-100">দয়াল হোমিও সদন</span>
           </Link>
         </div>
@@ -161,7 +161,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-50 hidden h-16 w-full border-b border-gray-200 bg-white/80 shadow-sm backdrop-blur-sm dark:border-gray-700 dark:bg-gray-900/80 md:flex">
         <div className="container mx-auto flex h-full items-center px-8">
           <Link href="/" className="mr-8 flex items-center space-x-2" aria-label="দয়াল হোমিও সদন Home">
-            <Leaf className="h-6 w-6 text-primary-500 dark:text-primary-300" />
+            <Sparkles className="h-6 w-6 text-primary-500 dark:text-primary-300" /> {/* Changed from Leaf */}
             <span className="text-2xl font-semibold text-gray-900 dark:text-gray-100">দয়াল হোমিও সদন</span>
           </Link>
           <nav className="flex flex-1 items-center space-x-2">
