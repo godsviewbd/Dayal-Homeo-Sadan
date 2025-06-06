@@ -1,17 +1,10 @@
+
 'use client';
 
 import { useState, useEffect, type ReactNode, useRef } from 'react';
-import dynamic from 'next/dynamic';
+// Removed dynamic import from next/dynamic
+import { SimpleSplashScreen } from '@/components/layout/SplashScreenWebGL'; // Direct import
 import { cn } from '@/lib/utils';
-
-// Dynamically import the WebGL splash screen to ensure it's client-side only
-const DynamicSplashScreen = dynamic(
-  () => import('@/components/layout/SplashScreenWebGL').then(mod => mod.SimpleSplashScreen),
-  { 
-    ssr: false,
-    // No loading fallback needed here as AppInitializer controls visibility directly
-  } 
-);
 
 interface AppInitializerProps {
   children: ReactNode;
@@ -19,12 +12,11 @@ interface AppInitializerProps {
 
 export function AppInitializer({ children }: AppInitializerProps) {
   const [isAppReady, setIsAppReady] = useState(false);
-  const [canRenderSplash, setCanRenderSplash] = useState(false); // New state
+  const [canRenderSplash, setCanRenderSplash] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Ensure splash is only attempted to render client-side after mount
   useEffect(() => {
-    setCanRenderSplash(true);
+    setCanRenderSplash(true); // Allow splash rendering only after AppInitializer has mounted
   }, []);
 
   const handleSkipSplash = () => {
@@ -35,14 +27,14 @@ export function AppInitializer({ children }: AppInitializerProps) {
   };
 
   useEffect(() => {
-    // This effect now only runs if canRenderSplash is true
     if (canRenderSplash && typeof window !== 'undefined') {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
+      // Retain existing splash duration for now
       timerRef.current = setTimeout(() => {
         setIsAppReady(true);
-      }, 2500); // Keep existing duration for now
+      }, 2500); 
 
       return () => {
         if (timerRef.current) {
@@ -50,11 +42,12 @@ export function AppInitializer({ children }: AppInitializerProps) {
         }
       };
     }
-  }, [canRenderSplash]); // Depend on canRenderSplash
+  }, [canRenderSplash]);
 
   return (
     <>
-      {!isAppReady && canRenderSplash && <DynamicSplashScreen onSkip={handleSkipSplash} />}
+      {/* Render SimpleSplashScreen directly, controlled by isAppReady and canRenderSplash */}
+      {!isAppReady && canRenderSplash && <SimpleSplashScreen onSkip={handleSkipSplash} />}
       
       <div className={cn(
         'transition-opacity duration-500 ease-in-out',
