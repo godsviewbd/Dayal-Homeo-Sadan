@@ -260,9 +260,9 @@ export function SearchMedicineClient() {
           <div className="mb-6 flex items-center">
             <SearchIcon className="mr-3 h-8 w-8 text-teal-500 dark:text-teal-300" />
             <div>
-              <h1 className="text-2xl font-semibold leading-snug text-gray-900 dark:text-gray-100">Intelligent Medicine Search</h1>
+              <h1 className="text-2xl font-semibold leading-snug text-gray-900 dark:text-gray-100">আপনার ঔষধ খুঁজুন</h1>
               <p className="mt-1 text-base text-gray-600 dark:text-gray-400">
-                Find medicines by name, potency, or use AI.
+                নাম বা শক্তি দিয়ে সহজেই ঔষধ খুঁজে বের করুন। প্রয়োজনে AI সাহায্য করবে।
               </p>
             </div>
           </div>
@@ -381,3 +381,4 @@ export function SearchMedicineClient() {
     </div>
   );
 }
+
