@@ -3,19 +3,13 @@
 
 import * as THREE from 'three';
 import React, { useRef, useMemo, useEffect, useState } from 'react';
-import { Canvas, useFrame, type ThreeElements } from '@react-three/fiber';
+// Removed 'type ThreeElements' as it's not explicitly used in this component's props/state.
+import { Canvas, useFrame } from '@react-three/fiber';
 import { PerspectiveCamera, Points, PointMaterial } from '@react-three/drei';
 import { cn } from '@/lib/utils';
 
 interface SplashScreenProps {
   onSkip?: () => void;
-}
-
-interface ParticleProps {
-  position: THREE.Vector3;
-  initialColor: THREE.Color;
-  targetScale: number;
-  targetOpacity: number;
 }
 
 const PARTICLE_COUNT = 100;
@@ -41,14 +35,14 @@ function FadingPoint({ initialPosition, initialColor, delay }: { initialPosition
       if (pointRef.current.position.y > SPREAD_FACTOR / 2 + 1) {
         pointRef.current.position.y = -SPREAD_FACTOR / 2 -1; // Loop around
       }
-      // Material opacity should be handled by PointMaterial's opacity prop directly if animated continuously
     }
   });
 
-  const positions = useMemo(() => Float32Array.from(initialPosition.toArray()), [initialPosition]);
+  const positionsArray = useMemo(() => Float32Array.from(initialPosition.toArray()), [initialPosition]);
   
   return (
-    <Points positions={positions} ref={pointRef}>
+    // Using Drei's <Points> component for simplicity, ref is to the THREE.Points object it creates
+    <Points ref={pointRef} positions={positionsArray as any}> {/* positions expects Float32Array | number[][] */}
       <PointMaterial
         transparent
         color={initialColor}
@@ -65,7 +59,7 @@ function FadingPoint({ initialPosition, initialColor, delay }: { initialPosition
 function ParticleSystem() {
   const particles = useMemo(() => {
     const temp = [];
-    const coolColors = [new THREE.Color('#6050A0'), new THREE.Color('#4A70D0'), new THREE.Color('#50A0C0')];
+    const coolColors = [new THREE.Color('#6050A0'), new THREE.Color('#4A70D0'), new THREE.Color('#50A0C0')]; // Teal/Purple shades
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       const x = (Math.random() - 0.5) * SPREAD_FACTOR;
       const y = (Math.random() - 0.5) * SPREAD_FACTOR;
@@ -97,10 +91,6 @@ function ParticleSystem() {
 
 // Renaming to SimpleSplashScreen to match the import in AppInitializer
 export function SimpleSplashScreen({ onSkip }: SplashScreenProps) {
-  // For Phase 1, the background is a solid dark color set on the canvas.
-  // A true gradient background in R3F requires a shader or a textured plane,
-  // which can be added in a later phase if desired.
-
   return (
     <div
       role="status"
@@ -118,12 +108,11 @@ export function SimpleSplashScreen({ onSkip }: SplashScreenProps) {
         <ParticleSystem />
       </Canvas>
       
-      {/* Minimalist text overlay for Phase 1, more elaborate text later */}
       <div className="pointer-events-none absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center text-center">
          <p
           className={cn(
             "px-4 text-xs",
-            "text-teal-400/70",
+            "text-teal-400/70", // Using teal consistent with brand
             "opacity-0 motion-safe:animate-fadeInSlow motion-safe:[animation-delay:1s]" 
           )}
         >
@@ -132,7 +121,7 @@ export function SimpleSplashScreen({ onSkip }: SplashScreenProps) {
          <p
           className={cn(
             "mt-1 px-4 text-xs",
-            "text-teal-400/50",
+            "text-teal-400/50", // Lighter teal for secondary text
             "opacity-0 motion-safe:animate-fadeInSlow motion-safe:[animation-delay:0.7s]" 
           )}
         >
