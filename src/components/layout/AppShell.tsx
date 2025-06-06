@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import {
   Sheet,
   SheetContent,
+  SheetDescription, // Added SheetDescription import
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -81,15 +82,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <SheetContent 
               side="left" 
               className="w-3/4 max-w-xs p-0 md:hidden overflow-y-auto"
-              aria-describedby="sheet-about-app-description" // Added aria-describedby
+              // Removed aria-describedby here, Radix will handle it via SheetDescription
             >
               <SheetHeader className="border-b p-4 sticky top-0 bg-background z-10">
                 <SheetTitle className="text-lg">অ্যাপ পরিচিতি — দয়াল হোমিও সদন</SheetTitle>
               </SheetHeader>
               <div className="p-4 space-y-3 text-sm text-muted-foreground">
-                <p id="sheet-about-app-description">
+                <SheetDescription id="sheet-about-app-description"> {/* Changed p to SheetDescription and kept id */}
                   দয়াল হোমিও সদন একটি সহজ, পরিষ্কার এবং বিশ্বস্ত হোমিওপ্যাথিক ওষুধ ব্যবস্থাপনার অ্যাপ। এটি ঘরোয়া চিকিৎসকদের এবং পরিবারের সদস্যদের জন্য তৈরি, যারা তাঁদের নিজস্ব ওষুধের তালিকা ও অবস্থান দ্রুত খুঁজে পেতে চান।
-                </p>
+                </SheetDescription>
                 <p>এই অ্যাপের মাধ্যমে আপনি—</p>
                 <ul className="list-disc list-inside space-y-1 pl-2">
                   <li>সহজে ওষুধ খুঁজে পেতে পারবেন</li>
