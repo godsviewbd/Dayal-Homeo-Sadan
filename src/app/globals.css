@@ -8,23 +8,20 @@
     /* Font variable - System fonts will be primary, PT Sans as fallback if --font-sans is kept */
     /* --font-sans defined by Tailwind config now */
     
-    /* Light Mode HSL Variables from User Spec */
-    --background: 220 14% 96%; /* #F9FAFB - User: Gray 50 */
-    --foreground: 220 22% 11%; /* #111827 - User: Gray 900 */
+    /* Light Mode HSL Variables - Adjusted for a slightly greener/natural feel for splash */
+    --background: 174 30% 96%; /* Lighter Teal/Greenish White for general light mode */
+    --foreground: 220 22% 11%; 
     
-    --card: 220 13% 91%; /* #F3F4F6 - User: Gray 100 */
-    --card-foreground: 220 22% 11%; /* #111827 - User: Gray 900 */
+    --card: 174 25% 92%; 
+    --card-foreground: 220 22% 11%;
     
-    --popover: 220 13% 91%; /* #F3F4F6 - User: Gray 100 */
-    --popover-foreground: 220 22% 11%; /* #111827 - User: Gray 900 */
+    --popover: 174 25% 92%;
+    --popover-foreground: 220 22% 11%;
     
-    /* Primary Brand Colors from User Spec */
-    --primary-brand: 175 28% 55%; /* #6FA8A3 - User: Teal 500 */
-    --primary-brand-hover: 174 30% 45%; /* #50958E - User: Teal 600 */
-    --primary-brand-foreground: 0 0% 100%; /* White text on primary brand */
+    --primary-brand: 175 28% 55%; 
+    --primary-brand-hover: 174 30% 45%; 
+    --primary-brand-foreground: 0 0% 100%; 
 
-    /* Primary Palette (Teal) HSL - for general UI elements, not necessarily buttons */
-    /* Keeping existing shades, primary-500 and primary-600 will use brand vars */
     --primary-50: 174 60% 95%; 
     --primary-100: 174 50% 90%;
     --primary-200: 174 40% 80%; 
@@ -36,58 +33,61 @@
     --primary-800: 174 40% 25%;
     --primary-900: 174 45% 15%;
 
-
-    /* Secondary Accent Color from User Spec */
-    --secondary: 203 18% 60%; /* #849FAD - User: Blue 400 */
+    --secondary: 203 18% 60%; 
     --secondary-foreground: 0 0% 100%; 
     
-    --muted: 220 10% 89%; /* #E5E7EB - User: Gray 200 (for muted backgrounds) */
-    --muted-foreground: 220 13% 26%; /* #374151 - User: Gray 700 */
+    --muted: 220 10% 89%; 
+    --muted-foreground: 220 13% 26%; 
     
     --accent: hsl(var(--secondary)); 
     --accent-foreground: hsl(var(--secondary-foreground));
     
-    /* Semantic Colors from User Spec */
-    --destructive: 0 65% 50%; /* #D22C2C - User: Red */
+    --destructive: 0 65% 50%; 
     --destructive-foreground: 0 0% 100%;
     
-    --success: 145 35% 44%; /* #4A9A65 - User: Green */
+    --success: 145 35% 44%; 
     --success-foreground: 0 0% 100%;
 
-    --warning: 36 77% 55%; /* #E29A36 - User: Amber */
-    --warning-foreground: 220 22% 11%; /* User: Gray 900 (for dark text on warning) */
+    --warning: 36 77% 55%; 
+    --warning-foreground: 220 22% 11%; 
     
-    --border: 220 10% 89%;   /* #E5E7EB - User: Gray 200 */
-    --input: 220 10% 89%;  /* #E5E7EB - User: Gray 200 */
-    /* --input-bg uses direct Tailwind classes bg-gray-50 mapped to --color-gray-50 */
+    --border: 220 10% 89%;   
+    --input: 220 10% 89%;  
     --ring: hsl(var(--primary-brand)); 
     
     --radius: 0.5rem;
     
-    /* Neutrals from spec (Section 8.1), used by theme mappings above */
-    --color-gray-50: 220 14% 96%;    /* #F9FAFB */
-    --color-gray-100: 220 13% 91%; /* #F3F4F6 */
-    --color-gray-200: 220 10% 89%;   /* #E5E7EB */ /* Adjusted HSL for #E5E7EB */
-    --color-gray-300: 218 10% 76%;  /* #D1D5DB */
-    --color-gray-400: 220 9% 55%;  /* #9CA3AF */
-    --color-gray-500: 220 7% 46%;  /* #6B7280 */
-    --color-gray-600: 220 10% 31%;    /* #4B5563 */
-    --color-gray-700: 220 13% 26%; /* #374151 */ /* Adjusted HSL for #374151 */
-    --color-gray-800: 220 16% 16%; /* #1F2937 */
-    --color-gray-900: 220 22% 11%;   /* #111827 */ /* Adjusted HSL for #111827 */
+    /* Neutrals */
+    --color-gray-50: 220 14% 96%;    
+    --color-gray-100: 220 13% 91%; 
+    --color-gray-200: 220 10% 89%;   
+    --color-gray-300: 218 10% 76%;  
+    --color-gray-400: 220 9% 55%;  
+    --color-gray-500: 220 7% 46%;  
+    --color-gray-600: 220 10% 31%;    
+    --color-gray-700: 220 13% 26%; 
+    --color-gray-800: 220 16% 16%; 
+    --color-gray-900: 220 22% 11%;  
 
-    /* Motion Variables from Spec (Section 13.1) */
+    /* Motion Variables */
     --motion-fast: 150ms;
     --motion-medium: 250ms;
     --motion-slow: 350ms;
     --ease-in: cubic-bezier(0.4, 0, 1, 1);
     --ease-out: cubic-bezier(0, 0, 0.2, 1);
     --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Splash Screen Specific Colors - Light Mode */
+    --splash-bg-light-start: 160 40% 95%; /* Very light, slightly minty green */
+    --splash-bg-light-end: 170 30% 97%;   /* Almost white with a hint of green */
+    --splash-glow-light: 150 100% 80%;    /* Soft light green glow */
+    --splash-tendril-light: 145 50% 60%;  /* Vibrant light green for tendrils */
+    --splash-logo-text-light: 174 45% 25%; /* Darker teal for text/logo for contrast */
   }
 
   .dark {
-    /* Dark Mode HSL Variables from Spec (Section 8.2) - UNCHANGED BY THIS REQUEST */
-    --background: 180 10% 12%; 
+    /* Dark Mode HSL Variables - Adjusted for a darker, natural green/teal splash */
+    --background: 180 15% 10%; /* Darker base for app */
     --foreground: 180 20% 88%; 
     
     --card: hsl(var(--color-gray-800)); 
@@ -123,8 +123,14 @@
         
     --border: hsl(var(--color-gray-700)); 
     --input: hsl(var(--color-gray-700));  
-    /* --input-bg uses direct Tailwind classes dark:bg-gray-800 mapped to --color-gray-800 */
-    --ring: hsl(var(--primary-brand)); 
+    --ring: hsl(var(--primary-brand));
+
+    /* Splash Screen Specific Colors - Dark Mode */
+    --splash-bg-dark-start: 170 25% 12%;  /* Deep Teal/Forest Green */
+    --splash-bg-dark-end: 175 30% 10%;    /* Even Deeper Green/Blue */
+    --splash-glow-dark: 160 50% 30%;      /* Muted green glow */
+    --splash-tendril-dark: 140 60% 55%;   /* Brighter, but still earthy green for tendrils */
+    --splash-logo-text-dark: 170 60% 85%; /* Light teal/off-white for text/logo */
   }
 }
 
@@ -172,9 +178,9 @@
 
   .input-base {
     @apply block w-full h-12 px-4 text-base rounded-lg;
-    @apply text-gray-900 dark:text-gray-100; /* These map to --foreground and --color-gray-100 */
-    @apply bg-gray-50 dark:bg-gray-800; /* These map to --color-gray-50 and --color-gray-800 */
-    @apply border-2 border-gray-200 dark:border-gray-700; /* These map to --border and --color-gray-700 */
+    @apply text-gray-900 dark:text-gray-100;
+    @apply bg-gray-50 dark:bg-gray-800;
+    @apply border-2 border-gray-200 dark:border-gray-700;
     @apply placeholder:text-gray-400 dark:placeholder:text-gray-500; 
     @apply focus:outline-none focus:border-primary-500 dark:focus:border-primary-300 focus:ring-2 focus:ring-primary-200 dark:focus:ring-primary-700;
     @apply transition-colors duration-150;
@@ -209,6 +215,33 @@
     content: "";
     @apply absolute bottom-0 left-0 w-full h-0.5 bg-primary rounded-full; 
   }
+
+  /* SVG Path Drawing Animation */
+  .path-drawing {
+    stroke-dasharray: 1000; /* Should be greater than any path's actual length */
+    stroke-dashoffset: 1000;
+    animation: drawPath 1.5s ease-out forwards;
+  }
+  @keyframes drawPath {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  /* Central Glow Animation */
+  .glow-pulsing {
+    animation: pulseGlow 2s infinite ease-in-out;
+  }
+  @keyframes pulseGlow {
+    0%, 100% {
+      opacity: 0.7;
+      transform: translate(-50%, -50%) scale(0.95);
+    }
+    50% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.05);
+    }
+  }
+
 }
 
 @layer utilities {
@@ -222,3 +255,5 @@
     transition-duration: var(--motion-slow);
   }
 }
+
+    
