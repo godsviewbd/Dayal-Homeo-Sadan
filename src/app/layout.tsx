@@ -1,16 +1,13 @@
 
-// Removed "use client";
-
 import type { Metadata } from 'next';
+// Import AppInitializer directly. Since AppInitializer is a Client Component,
+// Next.js will handle the client boundary correctly.
+import { AppInitializer } from '@/components/layout/AppInitializer';
 import './globals.css';
 import { AppShell } from '@/components/layout/AppShell';
-// Removed SimpleSplashScreen import, it will be handled by AppInitializer
 import { Toaster } from "@/components/ui/toaster";
-// Removed useState, useEffect
-import { cn } from '@/lib/utils';
-import { AppInitializer } from '@/components/layout/AppInitializer'; // New import
 
-export const metadata: Metadata = { // This can now stay
+export const metadata: Metadata = {
   title: 'দয়াল হোমিও সদন - Homeopathic Inventory Management',
   description: 'Efficiently manage your homeopathic medicine inventory with AI-powered insights.',
 };
@@ -20,8 +17,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Removed isAppReady state and useEffect for splash screen
-
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -30,6 +25,7 @@ export default function RootLayout({
       <body className="font-sans antialiased bg-background text-foreground">
          <a href="#main-content" className="skip-link">Skip to content</a>
 
+        {/* AppInitializer is now imported directly. It's a Client Component. */}
         <AppInitializer>
           <AppShell>{children}</AppShell>
         </AppInitializer>
