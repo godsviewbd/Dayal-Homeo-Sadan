@@ -219,17 +219,21 @@ export default {
           '0%': { opacity: '0', transform: 'translateY(10px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
-        // New keyframes for enhanced splash screen
+        // New/Updated keyframes for splash screen
         "logoPopIn": {
           '0%': { opacity: '0', transform: 'scale(0.8) rotateX(-10deg)' },
           '70%': { opacity: '1', transform: 'scale(1.05) rotateX(5deg)' },
           '100%': { opacity: '1', transform: 'scale(1) rotateX(0deg)' },
         },
+        "leafFloatIn": {
+          '0%': { opacity: '0', transform: 'translateY(15px) scale(0.9)' },
+          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
         "textEmerge": {
           '0%': { opacity: '0', transform: 'translateY(8px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
-        "frostedReveal": { // Simple fade-in for the panel with blur
+        "frostedReveal": { 
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
         },
@@ -238,9 +242,13 @@ export default {
           '50%': { transform: 'translateX(0%) scaleX(0.15)' },
           '100%': { transform: 'translateX(100%) scaleX(0.3)' },
         },
-        "fadeInSlow": { // General slow fade-in
+        "fadeInSlow": { 
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
+        },
+        "subtlePulse": {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.6' },
         }
       },
       animation: {
@@ -250,12 +258,14 @@ export default {
         "toast-slide-in-top": "toast-slide-in-top 0.3s ease-out forwards",
         "toast-fade-out": "toast-fade-out 0.3s ease-in forwards",
         "fadeInUpDelayed": "fadeInUpDelayed 0.6s cubic-bezier(0,0,0.2,1) 0.2s forwards",
-        // New animations for enhanced splash
-        "logoPopIn": 'logoPopIn 0.6s cubic-bezier(0.2, 1, 0.3, 1) 0.3s forwards',
+        // New/Updated animations for splash
+        "logoPopIn": 'logoPopIn 0.6s cubic-bezier(0.2, 1, 0.3, 1) forwards', // Kept if needed elsewhere
+        "leafFloatIn": 'leafFloatIn 0.7s cubic-bezier(0.2, 1, 0.3, 1) forwards',
         "textEmerge": 'textEmerge 0.5s cubic-bezier(0.2, 1, 0.3, 1) forwards',
-        "frostedReveal": 'frostedReveal 0.5s ease-out 0.2s forwards',
+        "frostedReveal": 'frostedReveal 0.5s ease-out forwards',
         "indeterminateProgress": 'indeterminateProgress 1.8s ease-in-out infinite',
         "fadeInSlow": 'fadeInSlow 0.5s ease-out forwards',
+        "subtlePulse": 'subtlePulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
     },
   },
