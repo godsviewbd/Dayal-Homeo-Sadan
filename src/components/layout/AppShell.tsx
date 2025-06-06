@@ -4,16 +4,15 @@ import type React from 'react';
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Leaf, Search, Package, PlusCircle, Sun, Moon, Menu } from 'lucide-react'; // Added Menu
+import { Leaf, Search, Package, PlusCircle, Sun, Moon, Menu, Facebook, Mail, Smartphone } from 'lucide-react'; // Added Menu & contact icons
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
   SheetContent,
-  // SheetDescription, // No longer directly used with new content
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet"; // Added Sheet components
+} from "@/components/ui/sheet";
 import { cn } from '@/lib/utils';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -82,13 +81,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <SheetContent 
               side="left" 
               className="w-3/4 max-w-xs p-0 md:hidden overflow-y-auto"
-              aria-describedby="sheet-about-description" // Added for accessibility
+              aria-describedby="sheet-about-app-description"
             >
               <SheetHeader className="border-b p-4 sticky top-0 bg-background z-10">
                 <SheetTitle className="text-lg">অ্যাপ পরিচিতি — দয়াল হোমিও সদন</SheetTitle>
               </SheetHeader>
               <div className="p-4 space-y-3 text-sm text-muted-foreground">
-                <p id="sheet-about-description"> {/* Added ID here */}
+                <p id="sheet-about-app-description">
                   দয়াল হোমিও সদন একটি সহজ, পরিষ্কার এবং বিশ্বস্ত হোমিওপ্যাথিক ওষুধ ব্যবস্থাপনার অ্যাপ। এটি ঘরোয়া চিকিৎসকদের এবং পরিবারের সদস্যদের জন্য তৈরি, যারা তাঁদের নিজস্ব ওষুধের তালিকা ও অবস্থান দ্রুত খুঁজে পেতে চান।
                 </p>
                 <p>এই অ্যাপের মাধ্যমে আপনি—</p>
@@ -101,8 +100,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <p>
                   অ্যাপটি বিশেষভাবে ডিজাইন করা হয়েছে যাতে এটি মোবাইল-ফার্স্ট, দ্রুতগতির এবং ব্যবহারবান্ধব হয় — যেকোনো বয়সের ব্যবহারকারীর জন্য সহজবোধ্য।
                 </p>
-                <p className="text-xs pt-1">সংস্করণ: 1.0.0</p>
-
+                
                 <h3 className="text-md font-semibold text-foreground pt-3">👤 অ্যাপ নির্মাতা</h3>
                 <p>
                   এই অ্যাপটি ভালোবাসা ও যত্নে তৈরি করেছেন <a href="https://www.facebook.com/share/1ASLPZfn9V/" target="_blank" rel="noopener noreferrer" className="underline text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300">Sozib Sorkar</a> 💚.
@@ -118,10 +116,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
                 <h3 className="text-md font-semibold text-foreground pt-3">📩 মতামত ও সহায়তা</h3>
                 <p>অ্যাপ ব্যবহারে যদি কোনো সমস্যা হয় বা নতুন কোনো ফিচারের প্রস্তাব দিতে চান, তাহলে যোগাযোগ করুন:</p>
-                <ul className="space-y-1">
-                  <li>📘 Facebook: <a href="https://www.facebook.com/share/1ASLPZfn9V/" target="_blank" rel="noopener noreferrer" className="underline text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300">Sozib Sorkar</a></li>
-                  <li>📧 Email: <a href="mailto:sozibsarker57@gmail.com" className="underline text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300">sozibsarker57@gmail.com</a></li>
-                  <li>📞 WhatsApp: <a href="https://wa.me/8801303347173" target="_blank" rel="noopener noreferrer" className="underline text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300">+8801303347173</a></li>
+                <ul className="space-y-2">
+                  <li>
+                    <a href="https://www.facebook.com/share/1ASLPZfn9V/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 underline text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300">
+                      <Facebook className="h-4 w-4" /> Sozib Sorkar
+                    </a>
+                  </li>
+                  <li>
+                    <a href="mailto:sozibsarker57@gmail.com" className="flex items-center gap-2 underline text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300">
+                      <Mail className="h-4 w-4" /> sozibsarker57@gmail.com
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://wa.me/8801303347173" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 underline text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300">
+                      <Smartphone className="h-4 w-4" /> +8801303347173 (WhatsApp)
+                    </a>
+                  </li>
                 </ul>
 
                 <p className="pt-4">
@@ -129,7 +139,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </p>
                 <p>আপনার প্রয়োজনে পাশে আছি। ধন্যবাদ! 🌿</p>
                  <div className="text-xs text-muted-foreground space-y-1 pt-4 border-t mt-4">
-                    <p>© {new Date().getFullYear()} দয়াল হোমিও সদন।</p>
+                    <p>সংস্করণ: 1.0.0</p>
+                    <p>© {new Date().getFullYear()} দয়াল হোমিও সদন। সর্বস্বত্ব সংরক্ষিত।</p>
                 </div>
               </div>
             </SheetContent>
@@ -195,7 +206,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="pb-14 pt-0 md:pb-0 md:pt-0"> 
              {children}
         </div>
-        {/* Mobile-only attribution footer REMOVED from here */}
       </main>
 
       {/* Mobile Bottom Tab Bar */}
