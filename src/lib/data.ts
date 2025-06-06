@@ -1,4 +1,6 @@
 
+'use server';
+
 import fs from 'fs';
 import path from 'path';
 import Papa from 'papaparse';
@@ -28,16 +30,19 @@ async function persistMedicinesToCSV(medicinesToPersist: Medicine[]): Promise<vo
   console.log(`DATA: Attempting to persist ${medicinesToPersist.length} medicines to CSV: ${MEDICINE_DATA_CSV_FILE_PATH}`);
   console.log(`DATA: Using CSV Headers for unparse: ${JSON.stringify(MEDICINE_DATA_CSV_HEADERS)}`);
   try {
-    const csvDataRows = medicinesToPersist.map(med => ({
+    // Sort before persisting to maintain order in the CSV file as well (optional, but good for consistency)
+    const sortedMedicinesToPersist = [...medicinesToPersist].sort((a, b) => a.name.localeCompare(b.name));
+
+    const csvDataRows = sortedMedicinesToPersist.map(med => ({
       [MEDICINE_DATA_CSV_HEADERS[0]]: med.name,
-      [MEDICINE_DATA_CSV_HEADERS[1]]: med.potency,
+      [MEDICINE_DATA_CSV_HEADERS[1]]: med.potency, // Persist the actual potency value
       [MEDICINE_DATA_CSV_HEADERS[2]]: med.location,
       [MEDICINE_DATA_CSV_HEADERS[3]]: med.quantity,
     }));
 
     const csvString = Papa.unparse(csvDataRows, {
       header: true,
-      fields: MEDICINE_DATA_CSV_HEADERS,
+      fields: MEDICINE_DATA_CSV_HEADERS, // Ensure these are the exact headers for the output file
     });
 
     fs.writeFileSync(MEDICINE_DATA_CSV_FILE_PATH, csvString, 'utf-8');
@@ -56,8 +61,18 @@ function loadMedicinesFromCSVInternal(): Medicine[] {
   if (!fs.existsSync(MEDICINE_DATA_CSV_FILE_PATH)) {
     console.error(`!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`);
     console.error(`DATA: ERROR - CSV file not found at ${MEDICINE_DATA_CSV_FILE_PATH}.`);
-    // ... (rest of the error logging for missing file)
+    console.error(`DATA: Please ensure the 'medicine_name.csv' file exists in the 'src/data/' directory.`);
+    console.error(`DATA: Expected headers: ${MEDICINE_DATA_CSV_HEADERS.join(', ')}`);
+    console.error(`DATA: The application will proceed with an empty inventory. You can add medicines through the UI.`);
     console.error(`!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`);
+    // Create an empty file with headers if it doesn't exist, to allow the app to start cleanly
+    try {
+      const csvHeaderString = Papa.unparse([], { header: true, fields: MEDICINE_DATA_CSV_HEADERS });
+      fs.writeFileSync(MEDICINE_DATA_CSV_FILE_PATH, csvHeaderString, 'utf-8');
+      console.log(`DATA: Created an empty medicine_name.csv with headers at ${MEDICINE_DATA_CSV_FILE_PATH}`);
+    } catch (creationError) {
+        console.error(`DATA: CRITICAL - Failed to create an empty medicine_name.csv: ${creationError instanceof Error ? creationError.message : String(creationError)}`);
+    }
     return [];
   }
 
@@ -66,17 +81,17 @@ function loadMedicinesFromCSVInternal(): Medicine[] {
     const parsed = Papa.parse<Record<string, string>>(csvFileContent, {
       header: true,
       skipEmptyLines: true,
-      dynamicTyping: false,
-      transformHeader: header => header.trim(),
+      dynamicTyping: false, // Keep as false, handle type conversion explicitly
+      transformHeader: header => header.trim(), // Trim headers
     });
 
-    // ... (rest of the header validation and data processing logic from original loadMedicinesFromCSV)
     const actualHeaders = parsed.meta.fields;
     if (!actualHeaders) {
       console.error(`Error: DATA: CSV file at ${MEDICINE_DATA_CSV_FILE_PATH} appears to be empty or has no headers. Inventory will be empty.`);
       return [];
     }
 
+    // Check for exact headers
     const missingHeaders = MEDICINE_DATA_CSV_HEADERS.filter(expectedHeader => !actualHeaders.includes(expectedHeader));
     if (missingHeaders.length > 0) {
       console.error(`Error: DATA: CSV file at ${MEDICINE_DATA_CSV_FILE_PATH} is missing one or more required headers or has unexpected headers.`);
@@ -96,17 +111,19 @@ function loadMedicinesFromCSVInternal(): Medicine[] {
       console.warn(`DATA: CSV file at ${MEDICINE_DATA_CSV_FILE_PATH} has ${fileContentLines.length} lines but PapaParse found 0 data rows. This could indicate formatting issues or all data rows were invalid/skipped.`);
     }
 
+
     const loadedMedicines = parsed.data.map((row, index) => {
       const medicineName = row[MEDICINE_DATA_CSV_HEADERS[0]]?.trim();
-      const rawPotencyFromCSV = row[MEDICINE_DATA_CSV_HEADERS[1]]?.trim();
+      const rawPotencyFromCSV = row[MEDICINE_DATA_CSV_HEADERS[1]]?.trim(); // This is the "Potecy/Power" column
       const boxNumber = row[MEDICINE_DATA_CSV_HEADERS[2]]?.trim();
       const totalNumberOfMedicineStr = row[MEDICINE_DATA_CSV_HEADERS[3]]?.trim();
 
+      // Basic validation
       if (!medicineName) {
         console.warn(`DATA: SKIPPING row ${index + 2} in medicine_name.csv due to missing '${MEDICINE_DATA_CSV_HEADERS[0]}'. Row data: ${JSON.stringify(row)}`);
         return null;
       }
-      if (!rawPotencyFromCSV) {
+      if (!rawPotencyFromCSV) { // Potency/Power field from CSV
         console.warn(`DATA: SKIPPING row ${index + 2} in medicine_name.csv for medicine '${medicineName}' due to missing '${MEDICINE_DATA_CSV_HEADERS[1]}'. Row data: ${JSON.stringify(row)}`);
         return null;
       }
@@ -125,35 +142,28 @@ function loadMedicinesFromCSVInternal(): Medicine[] {
         return null;
       }
       
-      let extractedPotency: string | undefined = undefined;
-      const rawPotencyLower = rawPotencyFromCSV.toLowerCase();
-
-      for (const canonicalP of POTENCIES) {
-        const canonicalPLower = canonicalP.toLowerCase();
-        const pattern = new RegExp(`(?:^|\\s|[a-zA-Z])${canonicalPLower.replace(/([+.*?()])/g, '\\$1')}(?:c|ch|ck|x|m|k|potency|power|\\s|$)?`, 'i');
-        const loosePattern = new RegExp(`\\b${canonicalPLower.replace(/([+.*?()])/g, '\\$1')}\\b`, 'i');
-
-        if (pattern.test(rawPotencyLower) || loosePattern.test(rawPotencyLower) || rawPotencyLower.includes(canonicalPLower)) {
-            if (POTENCIES.map(p => p.toLowerCase()).includes(rawPotencyLower)) {
-                 extractedPotency = POTENCIES.find(p => p.toLowerCase() === rawPotencyLower);
-            } else {
-                extractedPotency = canonicalP;
-            }
-            if (extractedPotency) break;
-        }
-      }
+      // Use the rawPotencyFromCSV directly for matching against POTENCIES
+      // If it's not in POTENCIES, it might be an error or need mapping, but for now, direct use.
+      let extractedPotency: string | undefined = POTENCIES.find(p => p.toLowerCase() === rawPotencyFromCSV.toLowerCase());
 
       if (!extractedPotency) {
-        const directMatch = POTENCIES.find(p => p.toLowerCase() === rawPotencyLower);
-        if (directMatch) {
-          extractedPotency = directMatch;
-        }
+          // Try to find a match if rawPotency includes a canonical potency, e.g. "200C" -> "200"
+          for (const canonicalP of POTENCIES) {
+              if (rawPotencyFromCSV.toUpperCase().includes(canonicalP.toUpperCase())) {
+                  extractedPotency = canonicalP;
+                  break;
+              }
+          }
+      }
+      
+      if (!extractedPotency) {
+        // If still not found, it might be a custom potency. We'll store it as is from the CSV.
+        // This means POTENCIES array might need to be updated or accept custom values if strict enum adherence is desired.
+        // For now, we allow it to pass through to support CSV data as-is.
+        console.warn(`DATA: Potency '${rawPotencyFromCSV}' for medicine '${medicineName}' in medicine_name.csv row ${index + 2} is not in the predefined POTENCIES list [${POTENCIES.join(', ')}]. Using the value from CSV directly. Consider updating POTENCIES in types/index.ts if this is a valid, recurring potency.`);
+        extractedPotency = rawPotencyFromCSV; // Store the raw value if not found in POTENCIES
       }
 
-      if (!extractedPotency) {
-        console.warn(`DATA: SKIPPING row ${index + 2} in medicine_name.csv for medicine '${medicineName}' due to unparsable or unmapped potency: '${rawPotencyFromCSV}'. It does not map to any of [${POTENCIES.join(', ')}] using enhanced logic. Row data: ${JSON.stringify(row)}`);
-        return null;
-      }
 
       const safeMedicineName = medicineName.replace(/[^a-zA-Z0-9-_]/g, '-').toLowerCase();
       const safePotency = extractedPotency.replace(/[^a-zA-Z0-9-_]/g, '-').toLowerCase();
@@ -163,11 +173,11 @@ function loadMedicinesFromCSVInternal(): Medicine[] {
       const newMedicineEntry: Medicine = {
         id: generatedId,
         name: medicineName,
-        potency: extractedPotency,
-        preparation: 'Liquid' as Preparation, // Default as per previous design
+        potency: extractedPotency, // This will be the value from POTENCIES or the raw CSV value
+        preparation: 'Liquid' as Preparation, // Default preparation
         location: boxNumber,
         quantity: quantity,
-        supplier: undefined, // Default as per previous design
+        supplier: undefined, // Default supplier
       };
       return newMedicineEntry;
     }).filter(Boolean) as Medicine[];
@@ -237,10 +247,11 @@ function loadIndicationsFromCSVInternal(): MedicineIndication[] {
 
 // Helper function to ensure medicines data is loaded into medicinesStore
 async function ensureMedicinesLoaded(): Promise<Medicine[]> {
-    // For simplicity in a dev environment and given persistence, we reload on each significant read.
-    // This could be optimized with a 'medicinesStoreLoaded' flag if reads were much more frequent than writes.
     console.log("DATA: ensureMedicinesLoaded - reloading from CSV.");
     medicinesStore = loadMedicinesFromCSVInternal();
+    // Sort medicines alphabetically by name
+    medicinesStore.sort((a, b) => a.name.localeCompare(b.name));
+    console.log(`DATA: ensureMedicinesLoaded - ${medicinesStore.length} medicines loaded and sorted.`);
     return JSON.parse(JSON.stringify(medicinesStore)); // Return a copy
 }
 
@@ -263,16 +274,17 @@ export async function getMedicines(): Promise<Medicine[]> {
 export async function getMedicineById(id: string): Promise<Medicine | undefined> {
   const currentMedicines = await ensureMedicinesLoaded();
   const medicineById = currentMedicines.find(m => m.id === id);
-  return medicineById; // It's already a copy from ensureMedicinesLoaded
+  return medicineById;
 }
 
 export async function addMedicine(medicineData: Omit<Medicine, 'id'>): Promise<Medicine> {
-  let currentMedicines = await ensureMedicinesLoaded(); // Load current state
+  let currentMedicines = await ensureMedicinesLoaded(); 
   const newMedicine: Medicine = { ...medicineData, id: `med_${Date.now()}_${Math.random().toString(36).substr(2, 9)}` };
-  currentMedicines.push(newMedicine); // Modify the loaded list
+  currentMedicines.push(newMedicine); 
+  // The list will be re-sorted and persisted by persistMedicinesToCSV
   console.log(`DATA: Added medicine '${newMedicine.name}'. Persisting ${currentMedicines.length} medicines...`);
-  await persistMedicinesToCSV(currentMedicines); // Persist the updated full list
-  medicinesStore = [...currentMedicines]; // Update global store (optional, as next read will refresh)
+  await persistMedicinesToCSV(currentMedicines); 
+  medicinesStore = [...currentMedicines].sort((a, b) => a.name.localeCompare(b.name)); // Update in-memory store and sort it
   return JSON.parse(JSON.stringify(newMedicine));
 }
 
@@ -284,11 +296,10 @@ export async function updateMedicine(id: string, updates: Partial<Omit<Medicine,
     return null;
   }
   const oldQuantity = currentMedicines[index].quantity;
-  // Ensure ID is preserved and not overwritten by partial updates
   currentMedicines[index] = { ...currentMedicines[index], ...updates, id: currentMedicines[index].id };
   console.log(`DATA: Updated ID '${id}' (${currentMedicines[index].name}). Qty: ${oldQuantity} -> ${currentMedicines[index].quantity}. Persisting ${currentMedicines.length} medicines...`);
-  await persistMedicinesToCSV(currentMedicines);
-  medicinesStore = [...currentMedicines];
+  await persistMedicinesToCSV(currentMedicines); // Persist will also sort
+  medicinesStore = [...currentMedicines].sort((a, b) => a.name.localeCompare(b.name)); // Update in-memory store and sort
   return JSON.parse(JSON.stringify(currentMedicines[index]));
 }
 
@@ -298,8 +309,8 @@ export async function deleteMedicine(id: string): Promise<boolean> {
   const updatedMedicines = currentMedicines.filter(m => m.id !== id);
   if (updatedMedicines.length < initialLength) {
     console.log(`DATA: Deleted ID '${id}'. Persisting ${updatedMedicines.length} medicines...`);
-    await persistMedicinesToCSV(updatedMedicines);
-    medicinesStore = [...updatedMedicines];
+    await persistMedicinesToCSV(updatedMedicines); // Persist will also sort
+    medicinesStore = [...updatedMedicines].sort((a, b) => a.name.localeCompare(b.name)); // Update in-memory store and sort
     return true;
   }
   console.warn(`DATA: Delete failed. ID '${id}' not found.`);
@@ -308,16 +319,20 @@ export async function deleteMedicine(id: string): Promise<boolean> {
 
 export async function searchMedicinesByNameAndPotency(nameQuery?: string, potencyQuery?: string): Promise<Medicine[]> {
   console.log(`DATA: Search called. Name: "${nameQuery}", Potency: "${potencyQuery}"`);
-  const currentMedicines = await ensureMedicinesLoaded();
+  // ensureMedicinesLoaded already sorts the medicines
+  const currentMedicines = await ensureMedicinesLoaded(); 
   
-  let results = [...currentMedicines]; // Work with a copy
+  let results = [...currentMedicines]; 
 
   const isNameQueryEmpty = !nameQuery || nameQuery.trim() === "";
   const isPotencyQueryNonSpecific = !potencyQuery || potencyQuery.trim().toLowerCase() === 'any' || potencyQuery.trim() === "";
 
+  // If both search criteria are effectively empty, return an empty array as per current spec for search results
+  // Or, if you want to return all (sorted) medicines, you'd change this logic.
+  // Current expectation from SearchMedicineClient seems to be empty if query is empty.
   if (isNameQueryEmpty && isPotencyQueryNonSpecific) {
-    console.log("DATA: Search is effectively empty. Returning empty results.");
-    return [];
+    console.log("DATA: Search is effectively empty. Returning empty results based on client expectation.");
+    return []; 
   }
   
   if (nameQuery && currentMedicines && currentMedicines.length > 0) {
@@ -338,17 +353,22 @@ export async function searchMedicinesByNameAndPotency(nameQuery?: string, potenc
 
   if (!isPotencyQueryNonSpecific) {
     const lowerPotencyQuery = potencyQuery!.toLowerCase().trim();
-    results = results.filter(m => m.potency.toLowerCase() === lowerPotencyQuery);
+    results = results.filter(m => {
+        // Ensure m.potency exists and is a string before calling toLowerCase
+        return m.potency && typeof m.potency === 'string' && m.potency.toLowerCase() === lowerPotencyQuery;
+    });
   }
-
+  // The results are already sorted because currentMedicines was sorted, and filter preserves order.
   console.log(`DATA: Search found ${results.length} medicines.`);
-  return results; // Already a copy
+  return results; 
 }
 
 export async function getUniqueMedicineNames(): Promise<string[]> {
-  const currentMedicines = await ensureMedicinesLoaded();
+  const currentMedicines = await ensureMedicinesLoaded(); // This ensures medicines are loaded and sorted
   const uniqueNames = new Set<string>();
   currentMedicines.forEach(med => uniqueNames.add(med.name));
+  // The sorting is already handled by ensureMedicinesLoaded for the base list, 
+  // but if we just want sorted unique names, sorting here from the Set is correct.
   const sortedNames = Array.from(uniqueNames).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
   console.log(`DATA: Found ${sortedNames.length} unique medicine names for autocomplete.`);
   return sortedNames;
