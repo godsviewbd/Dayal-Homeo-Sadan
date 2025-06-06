@@ -260,9 +260,9 @@ export function SearchMedicineClient() {
           <div className="mb-6 flex items-center">
             <SearchIcon className="mr-3 h-8 w-8 text-teal-500 dark:text-teal-300" />
             <div>
-              <h1 className="text-2xl font-semibold leading-snug text-gray-900 dark:text-gray-100">আপনার ঔষধ খুঁজুন</h1>
+              <h1 className="text-2xl font-semibold leading-snug text-gray-900 dark:text-gray-100">Find Your Homeopathic Medicine</h1>
               <p className="mt-1 text-base text-gray-600 dark:text-gray-400">
-                নাম বা শক্তি দিয়ে সহজেই ঔষধ খুঁজে বের করুন। প্রয়োজনে AI সাহায্য করবে।
+                Search by name or potency. Our AI assistant is here to help if you need it.
               </p>
             </div>
           </div>
