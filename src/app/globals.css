@@ -210,3 +210,15 @@
     @apply absolute bottom-0 left-0 w-full h-0.5 bg-primary rounded-full; 
   }
 }
+
+@layer utilities {
+  .duration-motion-fast {
+    transition-duration: var(--motion-fast);
+  }
+  .duration-motion-medium {
+    transition-duration: var(--motion-medium);
+  }
+  .duration-motion-slow {
+    transition-duration: var(--motion-slow);
+  }
+}

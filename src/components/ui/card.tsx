@@ -10,7 +10,7 @@ const Card = React.forwardRef<
     ref={ref}
     className={cn(
       // Applying .card-base styles from globals.css or directly here
-      "rounded-2xl bg-card text-card-foreground shadow-md transition-shadow duration-[var(--motion-medium)] ease-out hover:shadow-lg",
+      "rounded-2xl bg-card text-card-foreground shadow-md transition-shadow ease-out hover:shadow-lg duration-motion-medium",
       // Default padding from spec, can be overridden by specific card instances
       // "p-6", // Removing default padding from base Card to allow more specific control in implementations
       className

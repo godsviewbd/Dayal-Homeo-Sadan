@@ -25,7 +25,7 @@ const SelectTrigger = React.forwardRef<
       "dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500",
       "dark:focus:border-primary-300 dark:focus:ring-primary-700",
       "disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
-      "transition-colors duration-[var(--motion-fast)]",
+      "transition-colors duration-motion-fast",
       className // Allow overriding
     )}
     {...props}
