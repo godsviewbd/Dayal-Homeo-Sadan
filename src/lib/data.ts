@@ -7,10 +7,11 @@ import Papa from 'papaparse';
 import type { Medicine, Preparation, MedicineIndication } from '@/types'; // Added MedicineIndication
 import { POTENCIES } from '@/types';
 
-const MEDICINE_DATA_CSV_FILE_PATH = path.join(process.cwd(), 'src', 'data', 'medicine_name.csv');
+const DATA_DIR_PATH = path.join(process.cwd(), 'src', 'data');
+const MEDICINE_DATA_CSV_FILE_PATH = path.join(DATA_DIR_PATH, 'medicine_name.csv');
 const MEDICINE_DATA_CSV_HEADERS = ['Medicine Name', 'Potecy/Power', 'Box Number', 'Total Number Of Medicine'];
 
-const INDICATIONS_CSV_FILE_PATH = path.join(process.cwd(), 'src', 'data', 'medicine_indications.csv');
+const INDICATIONS_CSV_FILE_PATH = path.join(DATA_DIR_PATH, 'medicine_indications.csv');
 const INDICATIONS_CSV_HEADERS = ['Medicine Name', 'Indications'];
 
 // Module-level in-memory stores and loaded flags
@@ -19,8 +20,22 @@ let indicationsStore: MedicineIndication[] = []; // Changed name for clarity
 let medicinesDataLoaded = false;
 let indicationsDataLoaded = false;
 
+function ensureDataDirectoryExists(): void {
+  if (!fs.existsSync(DATA_DIR_PATH)) {
+    try {
+      fs.mkdirSync(DATA_DIR_PATH, { recursive: true });
+      console.log(`DATA: Created data directory at ${DATA_DIR_PATH}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`DATA: CRITICAL failure while creating data directory ${DATA_DIR_PATH}: ${errorMessage}`);
+      // Depending on how critical this is, you might want to throw an error
+      // For now, we'll log and let operations potentially fail if dir creation fails
+    }
+  }
+}
 
 async function persistMedicinesToCSV(medicinesToPersist: Medicine[]): Promise<void> {
+  ensureDataDirectoryExists();
   console.log(`DATA: Attempting to persist ${medicinesToPersist.length} medicines to CSV: ${MEDICINE_DATA_CSV_FILE_PATH}`);
   try {
     const sortedMedicinesToPersist = [...medicinesToPersist].sort((a, b) => a.name.localeCompare(b.name));
@@ -47,10 +62,11 @@ async function persistMedicinesToCSV(medicinesToPersist: Medicine[]): Promise<vo
 }
 
 function loadMedicinesFromCSVInternal(): Medicine[] {
+  ensureDataDirectoryExists();
   console.log(`DATA: loadMedicinesFromCSVInternal called. Attempting to load medicines from CSV: ${MEDICINE_DATA_CSV_FILE_PATH}`);
 
   if (!fs.existsSync(MEDICINE_DATA_CSV_FILE_PATH)) {
-    console.error(`DATA: ERROR - CSV file not found at ${MEDICINE_DATA_CSV_FILE_PATH}.`);
+    console.warn(`DATA: WARNING - CSV file not found at ${MEDICINE_DATA_CSV_FILE_PATH}. Attempting to create an empty one.`);
     try {
       const csvHeaderString = Papa.unparse([], { header: true, fields: MEDICINE_DATA_CSV_HEADERS });
       fs.writeFileSync(MEDICINE_DATA_CSV_FILE_PATH, csvHeaderString, 'utf-8');
@@ -72,7 +88,7 @@ function loadMedicinesFromCSVInternal(): Medicine[] {
 
     const actualHeaders = parsed.meta.fields;
     if (!actualHeaders || MEDICINE_DATA_CSV_HEADERS.some(expectedHeader => !actualHeaders.includes(expectedHeader))) {
-      console.error(`Error: DATA: CSV file at ${MEDICINE_DATA_CSV_FILE_PATH} has incorrect headers or is empty.`);
+      console.error(`Error: DATA: CSV file at ${MEDICINE_DATA_CSV_FILE_PATH} has incorrect headers or is empty. Please ensure it has headers: ${MEDICINE_DATA_CSV_HEADERS.join(', ')}`);
       return [];
     }
     
@@ -132,6 +148,7 @@ function loadMedicinesFromCSVInternal(): Medicine[] {
 }
 
 function loadIndicationsFromCSVInternal(): MedicineIndication[] {
+  ensureDataDirectoryExists();
   console.log(`DATA_INDICATIONS: loadIndicationsFromCSVInternal called. Attempting to load indications from CSV: ${INDICATIONS_CSV_FILE_PATH}`);
   if (!fs.existsSync(INDICATIONS_CSV_FILE_PATH)) {
     console.warn(`DATA_INDICATIONS: Indications CSV file not found at ${INDICATIONS_CSV_FILE_PATH}. Indications feature will be unavailable.`);
@@ -148,7 +165,7 @@ function loadIndicationsFromCSVInternal(): MedicineIndication[] {
     
     const actualHeaders = parsed.meta.fields;
     if (!actualHeaders || INDICATIONS_CSV_HEADERS.some(expectedHeader => !actualHeaders.includes(expectedHeader))) {
-     console.warn(`DATA_INDICATIONS: Indications CSV file at ${INDICATIONS_CSV_FILE_PATH} has incorrect or missing headers. Indications feature will be unavailable.`);
+     console.warn(`DATA_INDICATIONS: Indications CSV file at ${INDICATIONS_CSV_FILE_PATH} has incorrect or missing headers. Indications feature will be unavailable. Please ensure it has headers: ${INDICATIONS_CSV_HEADERS.join(', ')}`);
      return [];
    }
     const loadedIndications = parsed.data.map((row, index) => {
